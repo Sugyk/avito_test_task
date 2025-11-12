@@ -21,7 +21,13 @@ func NewServer() (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	slog.Info("successful connected to db")
+	slog.Info("successfully connected to db")
+
+	err = database.RunMigrations(db)
+	if err != nil {
+		return nil, err
+	}
+	slog.Info("migrations applied successfully")
 
 	handlers.Register(router, db)
 	return &Server{
