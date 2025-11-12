@@ -6,6 +6,7 @@ import (
 	"github.com/Sugyk/avito_test_task/internal/api/handlers"
 	"github.com/Sugyk/avito_test_task/pkg/database"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-migrate/migrate/v4"
 )
 
 type Server struct {
@@ -25,7 +26,9 @@ func NewServer() (*Server, error) {
 
 	err = database.RunMigrations(db)
 	if err != nil {
-		return nil, err
+		if err != migrate.ErrNoChange {
+			return nil, err
+		}
 	}
 	slog.Info("migrations applied successfully")
 
