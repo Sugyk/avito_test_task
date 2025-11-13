@@ -1,39 +1,36 @@
 package api
 
 import (
-	"log/slog"
+	"net/http"
 
 	"github.com/Sugyk/avito_test_task/internal/api/handlers"
-	"github.com/Sugyk/avito_test_task/pkg/database"
-	"github.com/gin-gonic/gin"
-	"github.com/golang-migrate/migrate/v4"
 )
 
-type Server struct {
-	router *gin.Engine
+var (
+	teamGetPostfix          = "/team/get"
+	usersSetIsActivePostfix = "/users/setIsActive"
+	prCreatePostfix         = "/pullRequest/create"
+	prMergePostfix          = "/pullRequest/merge"
+	prReassignPostfix       = "/pullRequest/reassign"
+	usersGetReviewPostfix   = "/users/getReview"
+)
+
+type Router struct {
+	server   *http.Server
+	handlers *handlers.Handler
 }
 
-func (s Server) Run() {}
+func NewRouter(port string, handler *handlers.Handler) *Router {
+	mux := http.NewServeMux()
 
-func NewServer() (*Server, error) {
-	router := gin.New()
+	// mux.HandleFunc("POST /team/add", nil)
 
-	db, err := database.NewDbConnection()
-	if err != nil {
-		return nil, err
+	server := &http.Server{
+		Addr:    ":" + port,
+		Handler: mux,
 	}
-	slog.Info("successfully connected to db")
-
-	err = database.RunMigrations(db)
-	if err != nil {
-		if err != migrate.ErrNoChange {
-			return nil, err
-		}
+	return &Router{
+		server:   server,
+		handlers: handler,
 	}
-	slog.Info("migrations applied successfully")
-
-	handlers.Register(router, db)
-	return &Server{
-		router: router,
-	}, nil
 }
