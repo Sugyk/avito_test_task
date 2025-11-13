@@ -1,19 +1,19 @@
 package service
 
 import (
-	"database/sql"
-
-	"github.com/Sugyk/avito_test_task/internal/repository"
+	"log/slog"
 )
 
 type Repository interface{}
 
 type Service struct {
-	repo Repository
+	repo   Repository
+	logger *slog.Logger
 }
 
-func NewService(db *sql.DB) *Service {
+func NewService(repo Repository, logger *slog.Logger) *Service {
 	return &Service{
-		repo: repository.NewRepository(db),
+		repo:   repo,
+		logger: logger,
 	}
 }
