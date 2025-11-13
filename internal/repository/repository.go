@@ -2,14 +2,17 @@ package repository
 
 import (
 	"database/sql"
+	"log/slog"
 )
 
 type Repository struct {
-	db *sql.DB
+	db     *sql.DB
+	logger *slog.Logger
 }
 
-func NewRepository(db *sql.DB) *Repository {
+func NewRepository(db *sql.DB, logger *slog.Logger) *Repository {
 	return &Repository{
 		db,
+		logger,
 	}
 }
