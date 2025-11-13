@@ -35,7 +35,7 @@ func NewApplication() *Application {
 	return &Application{}
 }
 
-func (a *Application) Start(ctx context.Context) error {
+func (a *Application) Start() error {
 	if err := a.initConfig(); err != nil {
 		return fmt.Errorf("init config: %w", err)
 	}
