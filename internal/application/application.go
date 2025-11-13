@@ -32,7 +32,9 @@ type Application struct {
 }
 
 func NewApplication() *Application {
-	return &Application{}
+	return &Application{
+		errChan: make(chan error),
+	}
 }
 
 func (a *Application) Start() error {
