@@ -1,6 +1,8 @@
 package api
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/Sugyk/avito_test_task/internal/api/handlers"
@@ -37,4 +39,11 @@ func NewRouter(port string, handler *handlers.Handler) *Router {
 
 func (r *Router) Start() error {
 	return r.server.ListenAndServe()
+}
+
+func (r *Router) Shutdown(ctx context.Context) error {
+	if err := r.server.Shutdown(ctx); err != nil {
+		return fmt.Errorf("server shutdown: %w", err)
+	}
+	return nil
 }

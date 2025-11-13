@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/Sugyk/avito_test_task/internal/api"
 	"github.com/Sugyk/avito_test_task/internal/api/handlers"
@@ -127,4 +128,35 @@ func (a *Application) startHTTPServer() {
 			a.errChan <- fmt.Errorf("HTTP server error: %w", err)
 		}
 	}()
+}
+
+func (a *Application) Wait(ctx context.Context, cancel context.CancelFunc) error {
+	defer cancel()
+
+	select {
+	case <-ctx.Done():
+		a.logger.Info("shutdown signal received, starting graceful shutdown...")
+	case err := <-a.errChan:
+		a.logger.Error("error received, initiating shutdown", "error", err)
+		return err
+	}
+
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer shutdownCancel()
+
+	if err := a.router.Shutdown(shutdownCtx); err != nil {
+		a.logger.Error("HTTP server shutdown error", "error", err)
+	}
+
+	if err := a.db.Close(); err != nil {
+		a.logger.Error("database closed with error", "error", err)
+	} else {
+		a.logger.Info("database connections closed")
+	}
+
+	a.wg.Wait()
+
+	a.logger.Info("graceful shutdown completed")
+
+	return nil
 }
