@@ -3,9 +3,12 @@ package application
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"os"
+	"sync"
 
 	"github.com/Sugyk/avito_test_task/internal/api"
 	"github.com/Sugyk/avito_test_task/internal/api/handlers"
@@ -20,6 +23,9 @@ type Application struct {
 	repo    *repository.Repository
 	service *service.Service
 	router  *api.Router
+
+	wg      sync.WaitGroup
+	errChan chan error
 
 	listening_port string
 }
@@ -48,6 +54,9 @@ func (a *Application) Start(ctx context.Context) error {
 		return fmt.Errorf("init router: %w", err)
 	}
 
+	a.startHTTPServer()
+
+	a.logger.Info("application started successfully")
 	return nil
 
 }
@@ -105,4 +114,17 @@ func (a *Application) initRouter() error {
 		handler,
 	)
 	return nil
+}
+
+func (a *Application) startHTTPServer() {
+	a.wg.Add(1)
+
+	go func() {
+		defer a.wg.Done()
+
+		a.logger.Info("Starting HTTP server on " + a.listening_port)
+		if err := a.router.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			a.errChan <- fmt.Errorf("HTTP server error: %w", err)
+		}
+	}()
 }

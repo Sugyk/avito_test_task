@@ -34,3 +34,7 @@ func NewRouter(port string, handler *handlers.Handler) *Router {
 		handlers: handler,
 	}
 }
+
+func (r *Router) Start() error {
+	return r.server.ListenAndServe()
+}
