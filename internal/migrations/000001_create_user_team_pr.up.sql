@@ -1,14 +1,13 @@
 CREATE TYPE pr_status AS ENUM ('OPEN', 'MERGED');
 
 CREATE TABLE IF NOT EXISTS Teams(
-    id VARCHAR PRIMARY KEY,
-    name VARCHAR UNIQUE
+    name VARCHAR PRIMARY KEY
 );
 
 CREATE TABLE IF NOT EXISTS Users(
     id VARCHAR PRIMARY KEY,
     name TEXT,
-    team_id VARCHAR REFERENCES Teams(id),
+    team_name VARCHAR REFERENCES Teams(name),
     isActive BOOLEAN
 );
 
