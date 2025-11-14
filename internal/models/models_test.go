@@ -152,3 +152,129 @@ func TestTeamAddRequestValidate(t *testing.T) {
 		})
 	}
 }
+
+func TestUsersSetIsActiveRequestValidate(t *testing.T) {
+	tests := []struct {
+		name    string
+		req     UsersSetIsActiveRequest
+		wantErr bool
+	}{
+		{
+			name: "valid request",
+			req: UsersSetIsActiveRequest{
+				UserId:   "u1",
+				IsActive: true,
+			},
+			wantErr: false,
+		},
+		{
+			name: "missing user_id",
+			req: UsersSetIsActiveRequest{
+				UserId:   "",
+				IsActive: false,
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.req.Validate()
+			if tt.wantErr && err == nil {
+				t.Errorf("expected error, got nil")
+			}
+			if !tt.wantErr && err != nil {
+				t.Errorf("expected no error, got %v", err)
+			}
+		})
+	}
+}
+
+func TestPullRequestCreateRequestValidate(t *testing.T) {
+	tests := []struct {
+		name    string
+		req     PullRequestCreateRequest
+		wantErr bool
+	}{
+		{
+			name: "valid request",
+			req: PullRequestCreateRequest{
+				PullRequestId:   "pr-1",
+				PullRequestName: "fix bug",
+				AuthorId:        "u1",
+			},
+			wantErr: false,
+		},
+		{
+			name: "missing pull_request_id",
+			req: PullRequestCreateRequest{
+				PullRequestId:   "",
+				PullRequestName: "xyz",
+				AuthorId:        "u1",
+			},
+			wantErr: true,
+		},
+		{
+			name: "missing pull_request_name",
+			req: PullRequestCreateRequest{
+				PullRequestId:   "pr-22",
+				PullRequestName: "",
+				AuthorId:        "u1",
+			},
+			wantErr: true,
+		},
+		{
+			name: "missing author_id",
+			req: PullRequestCreateRequest{
+				PullRequestId:   "pr-22",
+				PullRequestName: "upgrade",
+				AuthorId:        "",
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.req.Validate()
+			if tt.wantErr && err == nil {
+				t.Errorf("expected error, got nil")
+			}
+			if !tt.wantErr && err != nil {
+				t.Errorf("expected no error, got %v", err)
+			}
+		})
+	}
+}
+
+func TestPullRequestCreateRequest_ToPullRequest(t *testing.T) {
+	req := PullRequestCreateRequest{
+		PullRequestId:   "pr-10",
+		PullRequestName: "add search",
+		AuthorId:        "u2",
+	}
+
+	pr := req.ToPullRequest()
+
+	if pr.PullRequestId != req.PullRequestId {
+		t.Errorf("expected PullRequestId %s, got %s", req.PullRequestId, pr.PullRequestId)
+	}
+	if pr.PullRequestName != req.PullRequestName {
+		t.Errorf("expected PullRequestName %s, got %s", req.PullRequestName, pr.PullRequestName)
+	}
+	if pr.AuthorId != req.AuthorId {
+		t.Errorf("expected AuthorId %s, got %s", req.AuthorId, pr.AuthorId)
+	}
+	if pr.Status != "" {
+		t.Errorf("expected empty Status, got %s", pr.Status)
+	}
+	if len(pr.AssignedReviewers) != 0 {
+		t.Errorf("expected no AssignedReviewers, got %v", pr.AssignedReviewers)
+	}
+	if pr.CreatedAt != nil {
+		t.Errorf("expected CreatedAt nil, got %v", pr.CreatedAt)
+	}
+	if pr.MergedAt != nil {
+		t.Errorf("expected MergedAt nil, got %v", pr.MergedAt)
+	}
+}
