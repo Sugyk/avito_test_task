@@ -6,3 +6,8 @@ func (s *Service) UsersSetIsActive(userID string, isActive bool) (models.User, e
 	// TODO: implement the business logic to set user's active status
 	return models.User{}, nil
 }
+
+func (s *Service) UsersGetReview(userID string) ([]models.PullRequestShort, error) {
+	// TODO: implement the business logic to get user's pull requests for review
+	return []models.PullRequestShort{}, nil
+}

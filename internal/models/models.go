@@ -210,3 +210,15 @@ type PullRequestReassignResponse200 struct {
 	Pr         PullRequest `json:"pr"`
 	ReplacedBy string      `json:"replaced_by"`
 }
+
+type PullRequestShort struct {
+	PullRequestId   string `json:"pull_request_id"`
+	PullRequestName string `json:"pull_request_name"`
+	AuthorId        string `json:"author_id"`
+	Status          Status `json:"status"`
+}
+
+type UsersGetReviewResponse200 struct {
+	UserId       string             `json:"user_id"`
+	PullRequests []PullRequestShort `json:"pull_requests"`
+}

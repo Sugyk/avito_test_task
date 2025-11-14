@@ -116,6 +116,21 @@ func (mr *MockServiceMockRecorder) PullRequestReassign(prID, oldUserID any) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PullRequestReassign", reflect.TypeOf((*MockService)(nil).PullRequestReassign), prID, oldUserID)
 }
 
+// UsersGetReview mocks base method.
+func (m *MockService) UsersGetReview(userID string) ([]models.PullRequestShort, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UsersGetReview", userID)
+	ret0, _ := ret[0].([]models.PullRequestShort)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UsersGetReview indicates an expected call of UsersGetReview.
+func (mr *MockServiceMockRecorder) UsersGetReview(userID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UsersGetReview", reflect.TypeOf((*MockService)(nil).UsersGetReview), userID)
+}
+
 // UsersSetIsActive mocks base method.
 func (m *MockService) UsersSetIsActive(userID string, isActive bool) (models.User, error) {
 	m.ctrl.T.Helper()

@@ -721,3 +721,51 @@ func TestPullRequestReassign_DomainErrors(t *testing.T) {
 		})
 	}
 }
+
+func TestUsersGetReview_Success(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockService := NewMockService(ctrl)
+	h := NewHandler(mockService, slog.Default())
+
+	userID := "u2"
+	prs := []models.PullRequestShort{
+		{
+			PullRequestId:   "pr-1001",
+			PullRequestName: "Add search",
+			AuthorId:        "u1",
+			Status:          "OPEN",
+		},
+	}
+
+	// mock service call
+	mockService.EXPECT().
+		UsersGetReview(userID).
+		Return(prs, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/users/getReview?user_id="+userID, nil)
+	w := httptest.NewRecorder()
+
+	h.UsersGetReview(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+
+	expectedJSON := `{"user_id":"u2","pull_requests":[{"pull_request_id":"pr-1001","pull_request_name":"Add search","author_id":"u1","status":"OPEN"}]}`
+	require.JSONEq(t, expectedJSON, w.Body.String())
+}
+
+func TestUsersGetReview_MissingUserID(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	h := NewHandler(nil, slog.Default())
+
+	req := httptest.NewRequest(http.MethodGet, "/users/getReview", nil)
+	w := httptest.NewRecorder()
+
+	h.UsersGetReview(w, req)
+
+	require.Equal(t, http.StatusBadRequest, w.Code)
+	require.Contains(t, w.Body.String(), "missing user_id")
+}

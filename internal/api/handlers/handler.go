@@ -15,6 +15,7 @@ type Service interface {
 	PullRequestCreate(pr *models.PullRequest) (models.PullRequest, error)
 	PullRequestMerge(pr *models.PullRequest) (models.PullRequest, error)
 	PullRequestReassign(prID string, oldUserID string) (models.PullRequest, string, error)
+	UsersGetReview(userID string) ([]models.PullRequestShort, error)
 }
 
 type Handler struct {
