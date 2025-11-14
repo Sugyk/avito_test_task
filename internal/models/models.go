@@ -79,3 +79,93 @@ func (u *UsersSetIsActiveRequest) Validate() error {
 type UsersSerIsActiveResponse200 struct {
 	User User `json:"user"`
 }
+
+// /pullRequest/create:
+//
+//	post:
+//	  tags: [PullRequests]
+//	  summary: Создать PR и автоматически назначить до 2 ревьюверов из команды автора
+//	  requestBody:
+//	    required: true
+//	    content:
+//	      application/json:
+//	        schema:
+//	          type: object
+//	          required: [ pull_request_id, pull_request_name, author_id ]
+//	          properties:
+//	            pull_request_id: { type: string }
+//	            pull_request_name: { type: string }
+//	            author_id: { type: string }
+//	        example:
+//	          pull_request_id: pr-1001
+//	          pull_request_name: Add search
+//	          author_id: u1
+//	  responses:
+//	    '201':
+//	      description: PR создан
+//	      content:
+//	        application/json:
+//	          schema:
+//	            type: object
+//	            properties:
+//	              pr:
+//	                $ref: '#/components/schemas/PullRequest'
+//	          example:
+//	            pr:
+//	              pull_request_id: pr-1001
+//	              pull_request_name: Add search
+//	              author_id: u1
+//	              status: OPEN
+//	              assigned_reviewers: [u2, u3]
+//	    '404':
+//	      description: Автор/команда не найдены
+//	      content:
+//	        application/json:
+//	          schema: { $ref: '#/components/schemas/ErrorResponse' }
+//	    '409':
+//	      description: PR уже существует
+//	      content:
+//	        application/json:
+//	          schema: { $ref: '#/components/schemas/ErrorResponse' }
+//	          example:
+//	            error: { code: PR_EXISTS, message: PR id already exists }
+
+type PullRequest struct {
+	PullRequestId     string   `json:"pull_request_id"`
+	PullRequestName   string   `json:"pull_request_name"`
+	AuthorId          string   `json:"author_id"`
+	Status            Status   `json:"status"`
+	AssignedReviewers []string `json:"assigned_reviewers"`
+	CreatedAt         *string  `json:"createdAt,omitempty"`
+	MergedAt          *string  `json:"mergedAt,omitempty"`
+}
+
+type PullRequestCreateRequest struct {
+	PullRequestId   string `json:"pull_request_id"`
+	PullRequestName string `json:"pull_request_name"`
+	AuthorId        string `json:"author_id"`
+}
+
+func (p *PullRequestCreateRequest) Validate() error {
+	if p.PullRequestId == "" {
+		return fmt.Errorf("%w: pull_request_id is required", nil) // TODO: insert error
+	}
+	if p.PullRequestName == "" {
+		return fmt.Errorf("%w: pull_request_name is required", nil) // TODO: insert error
+	}
+	if p.AuthorId == "" {
+		return fmt.Errorf("%w: author_id is required", nil) // TODO: insert error
+	}
+	return nil
+}
+func (p *PullRequestCreateRequest) ToPullRequest() *PullRequest {
+	return &PullRequest{
+		PullRequestId:   p.PullRequestId,
+		PullRequestName: p.PullRequestName,
+		AuthorId:        p.AuthorId,
+	}
+}
+
+type PullRequestCreateResponse201 struct {
+	Pr PullRequest `json:"pr"`
+}
