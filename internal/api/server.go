@@ -8,15 +8,6 @@ import (
 	"github.com/Sugyk/avito_test_task/internal/api/handlers"
 )
 
-var (
-	teamGetPostfix          = "/team/get"
-	usersSetIsActivePostfix = "/users/setIsActive"
-	prCreatePostfix         = "/pullRequest/create"
-	prMergePostfix          = "/pullRequest/merge"
-	prReassignPostfix       = "/pullRequest/reassign"
-	usersGetReviewPostfix   = "/users/getReview"
-)
-
 type Router struct {
 	server   *http.Server
 	handlers *handlers.Handler
@@ -25,7 +16,13 @@ type Router struct {
 func NewRouter(port string, handler *handlers.Handler) *Router {
 	mux := http.NewServeMux()
 
-	// mux.HandleFunc("POST /team/add", nil)
+	mux.HandleFunc("POST /team/add", handler.TeamAdd)
+	mux.HandleFunc("GET /team/get", handler.TeamGet)
+	mux.HandleFunc("POST /users/setIsActive", handler.UsersSetIsActive)
+	mux.HandleFunc("POST /pullRequest/create", handler.PullRequestCreate)
+	mux.HandleFunc("POST /pullRequest/merge", handler.PullRequestMerge)
+	mux.HandleFunc("POST /pullRequest/reassign", handler.PullRequestReassign)
+	mux.HandleFunc("POST /users/getReview", handler.PullRequestReassign)
 
 	server := &http.Server{
 		Addr:    ":" + port,
