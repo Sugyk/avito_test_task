@@ -42,10 +42,10 @@ func (m *MockService) EXPECT() *MockServiceMockRecorder {
 }
 
 // CreateOrUpdateTeam mocks base method.
-func (m *MockService) CreateOrUpdateTeam(ctx context.Context, team *models.Team) (models.Team, error) {
+func (m *MockService) CreateOrUpdateTeam(ctx context.Context, team *models.Team) (*models.Team, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateOrUpdateTeam", ctx, team)
-	ret0, _ := ret[0].(models.Team)
+	ret0, _ := ret[0].(*models.Team)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

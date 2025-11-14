@@ -10,7 +10,7 @@ import (
 )
 
 type Service interface {
-	CreateOrUpdateTeam(ctx context.Context, team *models.Team) (models.Team, error)
+	CreateOrUpdateTeam(ctx context.Context, team *models.Team) (*models.Team, error)
 	GetTeamWithMembers(ctx context.Context, teamName string) (models.Team, error)
 	UsersSetIsActive(ctx context.Context, userID string, isActive bool) (models.User, error)
 	PullRequestCreate(ctx context.Context, pr *models.PullRequest) (models.PullRequest, error)

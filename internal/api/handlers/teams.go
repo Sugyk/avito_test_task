@@ -24,12 +24,18 @@ func (h *Handler) TeamAdd(w http.ResponseWriter, r *http.Request) {
 	team, err := h.service.CreateOrUpdateTeam(r.Context(), &req.Team)
 	if err != nil {
 		// team_name already exists
-		h.sendError(w, http.StatusBadRequest, models.TeamExistsErrorCode, err)
-		return
+		if errors.Is(err, models.ErrTeamExists) {
+			h.sendError(w, http.StatusBadRequest, models.TeamExistsErrorCode, err)
+			return
+		}
+		if errors.Is(err, models.ErrInternalError) {
+			h.sendError(w, http.StatusInternalServerError, models.TeamExistsErrorCode, err)
+			return
+		}
 	}
 	// create response
 	resp := models.TeamAddResponse200{
-		Team: team,
+		Team: *team,
 	}
 	// send response
 	h.sendJSON(w, http.StatusCreated, resp)

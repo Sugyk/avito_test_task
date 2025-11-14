@@ -21,18 +21,18 @@ func TestTeamAdd_Success(t *testing.T) {
 
 	mockService := NewMockService(ctrl)
 
-	teamInput := models.Team{
+	teamInput := &models.Team{
 		TeamName: "backend",
 		Members: []models.TeamMember{
 			{User_id: "1", Username: "alice"},
 		},
 	}
-	body, _ := json.Marshal(models.TeamAddRequest{Team: teamInput})
+	body, _ := json.Marshal(models.TeamAddRequest{Team: *teamInput})
 	req := httptest.NewRequest(http.MethodPost, "/team/add", bytes.NewReader(body))
 
 	mockService.
 		EXPECT().
-		CreateOrUpdateTeam(req.Context(), &teamInput).
+		CreateOrUpdateTeam(req.Context(), teamInput).
 		Return(teamInput, nil)
 
 	h := NewHandler(mockService, nil)
@@ -111,19 +111,19 @@ func TestTeamAdd_TeamExists(t *testing.T) {
 
 	mockService := NewMockService(ctrl)
 
-	teamInput := models.Team{
+	teamInput := &models.Team{
 		TeamName: "backend",
 		Members: []models.TeamMember{
 			{User_id: "1", Username: "alice"},
 		},
 	}
-	body, _ := json.Marshal(models.TeamAddRequest{Team: teamInput})
+	body, _ := json.Marshal(models.TeamAddRequest{Team: *teamInput})
 	req := httptest.NewRequest(http.MethodPost, "/team/add", bytes.NewReader(body))
 
 	mockService.
 		EXPECT().
-		CreateOrUpdateTeam(req.Context(), &teamInput).
-		Return(models.Team{}, errors.New("team_name already exists"))
+		CreateOrUpdateTeam(req.Context(), teamInput).
+		Return(&models.Team{}, errors.New("team_name already exists"))
 
 	h := NewHandler(mockService, slog.Default())
 
