@@ -34,3 +34,31 @@ func (h *Handler) PullRequestCreate(w http.ResponseWriter, r *http.Request) {
 	// send response
 	h.sendJSON(w, http.StatusCreated, resp)
 }
+
+func (h *Handler) PullRequestMerge(w http.ResponseWriter, r *http.Request) {
+	// decode request
+	var req models.PullRequestMergeRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.sendError(w, http.StatusBadRequest, "invalid request body", err)
+		return
+	}
+	// validate request
+	if err := req.Validate(); err != nil {
+		h.sendError(w, http.StatusBadRequest, models.InvalidInputErrorCode, err)
+		return
+	}
+	// business logic
+	pr, err := h.service.PullRequestMerge(req.ToPullRequest())
+	if err != nil {
+		// pr not found
+		// PR is already exists
+		h.sendError(w, http.StatusBadRequest, models.TeamExistsErrorCode, err)
+		return
+	}
+	// create response
+	resp := models.PullRequestMergeResponse200{
+		Pr: pr,
+	}
+	// send response
+	h.sendJSON(w, http.StatusOK, resp)
+}

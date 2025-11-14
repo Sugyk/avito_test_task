@@ -85,6 +85,21 @@ func (mr *MockServiceMockRecorder) PullRequestCreate(pr any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PullRequestCreate", reflect.TypeOf((*MockService)(nil).PullRequestCreate), pr)
 }
 
+// PullRequestMerge mocks base method.
+func (m *MockService) PullRequestMerge(pr *models.PullRequest) (models.PullRequest, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PullRequestMerge", pr)
+	ret0, _ := ret[0].(models.PullRequest)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// PullRequestMerge indicates an expected call of PullRequestMerge.
+func (mr *MockServiceMockRecorder) PullRequestMerge(pr any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PullRequestMerge", reflect.TypeOf((*MockService)(nil).PullRequestMerge), pr)
+}
+
 // UsersSetIsActive mocks base method.
 func (m *MockService) UsersSetIsActive(userID string, isActive bool) (models.User, error) {
 	m.ctrl.T.Helper()

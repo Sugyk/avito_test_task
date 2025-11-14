@@ -6,3 +6,8 @@ func (s *Service) PullRequestCreate(pr *models.PullRequest) (models.PullRequest,
 	// TODO: implement the business logic to create a pull request
 	return models.PullRequest{}, nil
 }
+
+func (s *Service) PullRequestMerge(pr *models.PullRequest) (models.PullRequest, error) {
+	// TODO: implement the business logic to merge a pull request
+	return models.PullRequest{}, nil
+}

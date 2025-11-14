@@ -13,6 +13,7 @@ type Service interface {
 	GetTeamWithMembers(teamName string) (models.Team, error)
 	UsersSetIsActive(userID string, isActive bool) (models.User, error)
 	PullRequestCreate(pr *models.PullRequest) (models.PullRequest, error)
+	PullRequestMerge(pr *models.PullRequest) (models.PullRequest, error)
 }
 
 type Handler struct {

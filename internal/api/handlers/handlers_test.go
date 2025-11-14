@@ -461,3 +461,111 @@ func TestPullRequestCreate_ServiceError(t *testing.T) {
 
 	require.Equal(t, http.StatusBadRequest, w.Code)
 }
+
+func TestPullRequestMerge_Success(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockService := NewMockService(ctrl)
+	h := NewHandler(mockService, slog.Default())
+
+	reqBody := models.PullRequestMergeRequest{
+		PullRequestId: "pr-1001",
+	}
+	body, _ := json.Marshal(reqBody)
+
+	mergedtime := func() *string {
+		v := "2025-11-14T10:00:00Z"
+		return &v
+	}()
+
+	expectedPR := models.PullRequest{
+		PullRequestId:     "pr-1001",
+		PullRequestName:   "Add search",
+		AuthorId:          "u1",
+		Status:            models.StatusMerged,
+		AssignedReviewers: []string{"u2", "u3"},
+		MergedAt:          mergedtime,
+	}
+
+	mockService.
+		EXPECT().
+		PullRequestMerge(reqBody.ToPullRequest()).
+		Return(expectedPR, nil)
+
+	req := httptest.NewRequest(http.MethodPost, "/pullRequest/merge", bytes.NewReader(body))
+	w := httptest.NewRecorder()
+
+	h.PullRequestMerge(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+
+	var resp models.PullRequestMergeResponse200
+	err := json.NewDecoder(w.Body).Decode(&resp)
+	require.NoError(t, err)
+	require.Equal(t, expectedPR, resp.Pr)
+}
+
+func TestPullRequestMerge_InvalidJSON(t *testing.T) {
+	h := NewHandler(nil, slog.Default())
+
+	req := httptest.NewRequest(http.MethodPost, "/pullRequest/merge", bytes.NewBufferString("{invalid json"))
+	w := httptest.NewRecorder()
+
+	h.PullRequestMerge(w, req)
+
+	require.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestPullRequestMerge_InvalidInput(t *testing.T) {
+	h := NewHandler(nil, slog.Default())
+
+	tests := []struct {
+		name string
+		body string
+	}{
+		{
+			name: "empty pr id",
+			body: `{"pull_request_id": ""}`,
+		},
+		{
+			name: "not provided",
+			body: `{}`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodPost, "/pullRequest/merge", bytes.NewReader([]byte(tt.body)))
+			w := httptest.NewRecorder()
+
+			h.PullRequestMerge(w, req)
+
+			require.Equal(t, http.StatusBadRequest, w.Code)
+		})
+	}
+}
+
+func TestPullRequestMerge_NotFound(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockSvc := NewMockService(ctrl)
+	h := NewHandler(mockSvc, slog.Default())
+
+	reqBody := models.PullRequestMergeRequest{
+		PullRequestId: "unknown-pr",
+	}
+	body, _ := json.Marshal(reqBody)
+
+	mockSvc.EXPECT().
+		PullRequestMerge(reqBody.ToPullRequest()).
+		Return(models.PullRequest{}, errors.New("PR not found"))
+
+	req := httptest.NewRequest(http.MethodPost, "/pullRequest/merge", bytes.NewReader(body))
+	w := httptest.NewRecorder()
+
+	h.PullRequestMerge(w, req)
+
+	require.Equal(t, http.StatusBadRequest, w.Code)
+}

@@ -169,3 +169,24 @@ func (p *PullRequestCreateRequest) ToPullRequest() *PullRequest {
 type PullRequestCreateResponse201 struct {
 	Pr PullRequest `json:"pr"`
 }
+
+type PullRequestMergeRequest struct {
+	PullRequestId string `json:"pull_request_id"`
+}
+
+func (p *PullRequestMergeRequest) Validate() error {
+	if p.PullRequestId == "" {
+		return fmt.Errorf("%w: pull_request_id is required", nil) // TODO: insert error
+	}
+	return nil
+}
+
+func (p *PullRequestMergeRequest) ToPullRequest() *PullRequest {
+	return &PullRequest{
+		PullRequestId: p.PullRequestId,
+	}
+}
+
+type PullRequestMergeResponse200 struct {
+	Pr PullRequest `json:"pr"`
+}
