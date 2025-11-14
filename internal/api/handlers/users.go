@@ -62,7 +62,7 @@ func (h *Handler) UsersSetIsActive(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// business logic
-	user, err := h.service.UsersSetIsActive(req.UserId, req.IsActive)
+	user, err := h.service.UsersSetIsActive(r.Context(), req.UserId, req.IsActive)
 	if err != nil {
 		// user not found
 		h.sendError(w, http.StatusNotFound, models.NotFoundErrorCode, err)
@@ -114,7 +114,7 @@ func (h *Handler) UsersGetReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// business logic
-	prs, err := h.service.UsersGetReview(userID)
+	prs, err := h.service.UsersGetReview(r.Context(), userID)
 	if err != nil {
 		// user not found
 		h.sendError(w, http.StatusNotFound, models.NotFoundErrorCode, err)

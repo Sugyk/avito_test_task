@@ -27,16 +27,16 @@ func TestTeamAdd_Success(t *testing.T) {
 			{User_id: "1", Username: "alice"},
 		},
 	}
+	body, _ := json.Marshal(models.TeamAddRequest{Team: teamInput})
+	req := httptest.NewRequest(http.MethodPost, "/team/add", bytes.NewReader(body))
 
 	mockService.
 		EXPECT().
-		CreateOrUpdateTeam(&teamInput).
+		CreateOrUpdateTeam(req.Context(), &teamInput).
 		Return(teamInput, nil)
 
 	h := NewHandler(mockService, nil)
 
-	body, _ := json.Marshal(models.TeamAddRequest{Team: teamInput})
-	req := httptest.NewRequest(http.MethodPost, "/team/add", bytes.NewReader(body))
 	w := httptest.NewRecorder()
 
 	h.TeamAdd(w, req)
@@ -117,16 +117,16 @@ func TestTeamAdd_TeamExists(t *testing.T) {
 			{User_id: "1", Username: "alice"},
 		},
 	}
+	body, _ := json.Marshal(models.TeamAddRequest{Team: teamInput})
+	req := httptest.NewRequest(http.MethodPost, "/team/add", bytes.NewReader(body))
 
 	mockService.
 		EXPECT().
-		CreateOrUpdateTeam(&teamInput).
+		CreateOrUpdateTeam(req.Context(), &teamInput).
 		Return(models.Team{}, errors.New("team_name already exists"))
 
 	h := NewHandler(mockService, slog.Default())
 
-	body, _ := json.Marshal(models.TeamAddRequest{Team: teamInput})
-	req := httptest.NewRequest(http.MethodPost, "/team/add", bytes.NewReader(body))
 	w := httptest.NewRecorder()
 
 	h.TeamAdd(w, req)
@@ -157,14 +157,14 @@ func TestTeamGet_Success(t *testing.T) {
 			},
 		},
 	}
+	req := httptest.NewRequest(http.MethodGet, "/team/get?team_name="+testTeamName, nil)
 	mockService.
 		EXPECT().
-		GetTeamWithMembers(testTeamName).
+		GetTeamWithMembers(req.Context(), testTeamName).
 		Return(expectedTeam, nil)
 
 	h := NewHandler(mockService, slog.Default())
 
-	req := httptest.NewRequest(http.MethodGet, "/team/get?team_name="+testTeamName, nil)
 	w := httptest.NewRecorder()
 
 	h.TeamGet(w, req)
@@ -186,14 +186,14 @@ func TestTeamGet_NotFound(t *testing.T) {
 
 	mockSvc := NewMockService(ctrl)
 	// Expect call with "unknown" and return error
+	req := httptest.NewRequest(http.MethodGet, "/team/get?team_name="+testTeamName, nil)
 	mockSvc.
 		EXPECT().
-		GetTeamWithMembers(testTeamName).
+		GetTeamWithMembers(req.Context(), testTeamName).
 		Return(models.Team{}, errors.New("not found"))
 
 	h := NewHandler(mockSvc, slog.Default())
 
-	req := httptest.NewRequest(http.MethodGet, "/team/get?team_name="+testTeamName, nil)
 	w := httptest.NewRecorder()
 
 	h.TeamGet(w, req)
@@ -239,7 +239,7 @@ func TestUsersSetIsActive_Success(t *testing.T) {
 		IsActive: false,
 	}
 
-	mockService.EXPECT().UsersSetIsActive(reqBody.UserId, reqBody.IsActive).Return(expectedUser, nil)
+	mockService.EXPECT().UsersSetIsActive(req.Context(), reqBody.UserId, reqBody.IsActive).Return(expectedUser, nil)
 
 	h.UsersSetIsActive(w, req)
 
@@ -290,7 +290,7 @@ func TestUsersSetIsActive_UserNotFound(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	mockService.EXPECT().
-		UsersSetIsActive(reqBody.UserId, reqBody.IsActive).
+		UsersSetIsActive(req.Context(), reqBody.UserId, reqBody.IsActive).
 		Return(models.User{}, errors.New("user not found"))
 
 	h.UsersSetIsActive(w, req)
@@ -319,13 +319,13 @@ func TestPullRequestCreate_Success(t *testing.T) {
 		Status:            models.StatusOpen,
 		AssignedReviewers: []string{"u2", "u3"},
 	}
+	req := httptest.NewRequest(http.MethodPost, "/pullRequest/create", bytes.NewReader(body))
 
 	mockService.
 		EXPECT().
-		PullRequestCreate(reqBody.ToPullRequest()).
+		PullRequestCreate(req.Context(), reqBody.ToPullRequest()).
 		Return(expectedPR, nil)
 
-	req := httptest.NewRequest(http.MethodPost, "/pullRequest/create", bytes.NewReader(body))
 	w := httptest.NewRecorder()
 
 	h.PullRequestCreate(w, req)
@@ -397,11 +397,11 @@ func TestPullRequestCreate_PRExists(t *testing.T) {
 
 	body, _ := json.Marshal(reqBody)
 
+	req := httptest.NewRequest(http.MethodPost, "/pullRequest/create", bytes.NewReader(body))
 	mockSvc.EXPECT().
-		PullRequestCreate(reqBody.ToPullRequest()).
+		PullRequestCreate(req.Context(), reqBody.ToPullRequest()).
 		Return(models.PullRequest{}, errors.New("PR id already exists"))
 
-	req := httptest.NewRequest(http.MethodPost, "/pullRequest/create", bytes.NewReader(body))
 	w := httptest.NewRecorder()
 
 	h.PullRequestCreate(w, req)
@@ -424,11 +424,11 @@ func TestPullRequestCreate_AuthorOrTeamNotFound(t *testing.T) {
 
 	body, _ := json.Marshal(reqBody)
 
+	req := httptest.NewRequest(http.MethodPost, "/pullRequest/create", bytes.NewReader(body))
 	mockSvc.EXPECT().
-		PullRequestCreate(reqBody.ToPullRequest()).
+		PullRequestCreate(req.Context(), reqBody.ToPullRequest()).
 		Return(models.PullRequest{}, errors.New("author not found"))
 
-	req := httptest.NewRequest(http.MethodPost, "/pullRequest/create", bytes.NewReader(body))
 	w := httptest.NewRecorder()
 
 	h.PullRequestCreate(w, req)
@@ -450,11 +450,11 @@ func TestPullRequestCreate_ServiceError(t *testing.T) {
 	}
 	body, _ := json.Marshal(reqBody)
 
+	req := httptest.NewRequest(http.MethodPost, "/pullRequest/create", bytes.NewReader(body))
 	mockSvc.EXPECT().
-		PullRequestCreate(reqBody.ToPullRequest()).
+		PullRequestCreate(req.Context(), reqBody.ToPullRequest()).
 		Return(models.PullRequest{}, errors.New("unknown error"))
 
-	req := httptest.NewRequest(http.MethodPost, "/pullRequest/create", bytes.NewReader(body))
 	w := httptest.NewRecorder()
 
 	h.PullRequestCreate(w, req)
@@ -488,12 +488,12 @@ func TestPullRequestMerge_Success(t *testing.T) {
 		MergedAt:          mergedtime,
 	}
 
+	req := httptest.NewRequest(http.MethodPost, "/pullRequest/merge", bytes.NewReader(body))
 	mockService.
 		EXPECT().
-		PullRequestMerge(reqBody.ToPullRequest()).
+		PullRequestMerge(req.Context(), reqBody.ToPullRequest()).
 		Return(expectedPR, nil)
 
-	req := httptest.NewRequest(http.MethodPost, "/pullRequest/merge", bytes.NewReader(body))
 	w := httptest.NewRecorder()
 
 	h.PullRequestMerge(w, req)
@@ -558,11 +558,11 @@ func TestPullRequestMerge_NotFound(t *testing.T) {
 	}
 	body, _ := json.Marshal(reqBody)
 
+	req := httptest.NewRequest(http.MethodPost, "/pullRequest/merge", bytes.NewReader(body))
 	mockSvc.EXPECT().
-		PullRequestMerge(reqBody.ToPullRequest()).
+		PullRequestMerge(req.Context(), reqBody.ToPullRequest()).
 		Return(models.PullRequest{}, errors.New("PR not found"))
 
-	req := httptest.NewRequest(http.MethodPost, "/pullRequest/merge", bytes.NewReader(body))
 	w := httptest.NewRecorder()
 
 	h.PullRequestMerge(w, req)
@@ -592,12 +592,12 @@ func TestPullRequestReassign_Success(t *testing.T) {
 		AssignedReviewers: []string{"u3", "u5"},
 	}
 
+	req := httptest.NewRequest(http.MethodPost, "/pullRequest/reassign", bytes.NewReader(body))
 	mockSvc.
 		EXPECT().
-		PullRequestReassign(reqBody.PullRequestId, reqBody.OldReviewerId).
+		PullRequestReassign(req.Context(), reqBody.PullRequestId, reqBody.OldReviewerId).
 		Return(expectedPR, "u5", nil)
 
-	req := httptest.NewRequest(http.MethodPost, "/pullRequest/reassign", bytes.NewReader(body))
 	w := httptest.NewRecorder()
 
 	h.PullRequestReassign(w, req)
@@ -669,12 +669,12 @@ func TestPullRequestReassign_NotFound(t *testing.T) {
 
 	body, _ := json.Marshal(reqBody)
 
+	req := httptest.NewRequest(http.MethodPost, "/pullRequest/reassign", bytes.NewReader(body))
 	mockSvc.
 		EXPECT().
-		PullRequestReassign(reqBody.PullRequestId, reqBody.OldReviewerId).
+		PullRequestReassign(req.Context(), reqBody.PullRequestId, reqBody.OldReviewerId).
 		Return(models.PullRequest{}, "", errors.New("not found"))
 
-	req := httptest.NewRequest(http.MethodPost, "/pullRequest/reassign", bytes.NewReader(body))
 	w := httptest.NewRecorder()
 
 	h.PullRequestReassign(w, req)
@@ -706,13 +706,13 @@ func TestPullRequestReassign_DomainErrors(t *testing.T) {
 				OldReviewerId: "u5",
 			}
 			body, _ := json.Marshal(reqBody)
+			req := httptest.NewRequest(http.MethodPost, "/pullRequest/reassign", bytes.NewReader(body))
 
 			mockSvc.
 				EXPECT().
-				PullRequestReassign(reqBody.PullRequestId, reqBody.OldReviewerId).
+				PullRequestReassign(req.Context(), reqBody.PullRequestId, reqBody.OldReviewerId).
 				Return(models.PullRequest{}, "", c.svcErr)
 
-			req := httptest.NewRequest(http.MethodPost, "/pullRequest/reassign", bytes.NewReader(body))
 			w := httptest.NewRecorder()
 
 			h.PullRequestReassign(w, req)
@@ -738,13 +738,13 @@ func TestUsersGetReview_Success(t *testing.T) {
 			Status:          "OPEN",
 		},
 	}
+	req := httptest.NewRequest(http.MethodGet, "/users/getReview?user_id="+userID, nil)
 
 	// mock service call
 	mockService.EXPECT().
-		UsersGetReview(userID).
+		UsersGetReview(req.Context(), userID).
 		Return(prs, nil)
 
-	req := httptest.NewRequest(http.MethodGet, "/users/getReview?user_id="+userID, nil)
 	w := httptest.NewRecorder()
 
 	h.UsersGetReview(w, req)

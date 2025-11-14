@@ -21,7 +21,7 @@ func (h *Handler) TeamAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// business logic
-	team, err := h.service.CreateOrUpdateTeam(&req.Team)
+	team, err := h.service.CreateOrUpdateTeam(r.Context(), &req.Team)
 	if err != nil {
 		// team_name already exists
 		h.sendError(w, http.StatusBadRequest, models.TeamExistsErrorCode, err)
@@ -44,7 +44,7 @@ func (h *Handler) TeamGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// business logic
-	team, err := h.service.GetTeamWithMembers(teamName)
+	team, err := h.service.GetTeamWithMembers(r.Context(), teamName)
 	if err != nil {
 		// team not found
 		h.sendError(w, http.StatusNotFound, models.NotFoundErrorCode, err)

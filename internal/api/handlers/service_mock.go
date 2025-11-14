@@ -10,6 +10,7 @@
 package handlers
 
 import (
+	context "context"
 	reflect "reflect"
 
 	models "github.com/Sugyk/avito_test_task/internal/models"
@@ -41,69 +42,69 @@ func (m *MockService) EXPECT() *MockServiceMockRecorder {
 }
 
 // CreateOrUpdateTeam mocks base method.
-func (m *MockService) CreateOrUpdateTeam(team *models.Team) (models.Team, error) {
+func (m *MockService) CreateOrUpdateTeam(ctx context.Context, team *models.Team) (models.Team, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateOrUpdateTeam", team)
+	ret := m.ctrl.Call(m, "CreateOrUpdateTeam", ctx, team)
 	ret0, _ := ret[0].(models.Team)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateOrUpdateTeam indicates an expected call of CreateOrUpdateTeam.
-func (mr *MockServiceMockRecorder) CreateOrUpdateTeam(team any) *gomock.Call {
+func (mr *MockServiceMockRecorder) CreateOrUpdateTeam(ctx, team any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrUpdateTeam", reflect.TypeOf((*MockService)(nil).CreateOrUpdateTeam), team)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrUpdateTeam", reflect.TypeOf((*MockService)(nil).CreateOrUpdateTeam), ctx, team)
 }
 
 // GetTeamWithMembers mocks base method.
-func (m *MockService) GetTeamWithMembers(teamName string) (models.Team, error) {
+func (m *MockService) GetTeamWithMembers(ctx context.Context, teamName string) (models.Team, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTeamWithMembers", teamName)
+	ret := m.ctrl.Call(m, "GetTeamWithMembers", ctx, teamName)
 	ret0, _ := ret[0].(models.Team)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetTeamWithMembers indicates an expected call of GetTeamWithMembers.
-func (mr *MockServiceMockRecorder) GetTeamWithMembers(teamName any) *gomock.Call {
+func (mr *MockServiceMockRecorder) GetTeamWithMembers(ctx, teamName any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTeamWithMembers", reflect.TypeOf((*MockService)(nil).GetTeamWithMembers), teamName)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTeamWithMembers", reflect.TypeOf((*MockService)(nil).GetTeamWithMembers), ctx, teamName)
 }
 
 // PullRequestCreate mocks base method.
-func (m *MockService) PullRequestCreate(pr *models.PullRequest) (models.PullRequest, error) {
+func (m *MockService) PullRequestCreate(ctx context.Context, pr *models.PullRequest) (models.PullRequest, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "PullRequestCreate", pr)
+	ret := m.ctrl.Call(m, "PullRequestCreate", ctx, pr)
 	ret0, _ := ret[0].(models.PullRequest)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // PullRequestCreate indicates an expected call of PullRequestCreate.
-func (mr *MockServiceMockRecorder) PullRequestCreate(pr any) *gomock.Call {
+func (mr *MockServiceMockRecorder) PullRequestCreate(ctx, pr any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PullRequestCreate", reflect.TypeOf((*MockService)(nil).PullRequestCreate), pr)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PullRequestCreate", reflect.TypeOf((*MockService)(nil).PullRequestCreate), ctx, pr)
 }
 
 // PullRequestMerge mocks base method.
-func (m *MockService) PullRequestMerge(pr *models.PullRequest) (models.PullRequest, error) {
+func (m *MockService) PullRequestMerge(ctx context.Context, pr *models.PullRequest) (models.PullRequest, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "PullRequestMerge", pr)
+	ret := m.ctrl.Call(m, "PullRequestMerge", ctx, pr)
 	ret0, _ := ret[0].(models.PullRequest)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // PullRequestMerge indicates an expected call of PullRequestMerge.
-func (mr *MockServiceMockRecorder) PullRequestMerge(pr any) *gomock.Call {
+func (mr *MockServiceMockRecorder) PullRequestMerge(ctx, pr any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PullRequestMerge", reflect.TypeOf((*MockService)(nil).PullRequestMerge), pr)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PullRequestMerge", reflect.TypeOf((*MockService)(nil).PullRequestMerge), ctx, pr)
 }
 
 // PullRequestReassign mocks base method.
-func (m *MockService) PullRequestReassign(prID, oldUserID string) (models.PullRequest, string, error) {
+func (m *MockService) PullRequestReassign(ctx context.Context, prID, oldUserID string) (models.PullRequest, string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "PullRequestReassign", prID, oldUserID)
+	ret := m.ctrl.Call(m, "PullRequestReassign", ctx, prID, oldUserID)
 	ret0, _ := ret[0].(models.PullRequest)
 	ret1, _ := ret[1].(string)
 	ret2, _ := ret[2].(error)
@@ -111,37 +112,37 @@ func (m *MockService) PullRequestReassign(prID, oldUserID string) (models.PullRe
 }
 
 // PullRequestReassign indicates an expected call of PullRequestReassign.
-func (mr *MockServiceMockRecorder) PullRequestReassign(prID, oldUserID any) *gomock.Call {
+func (mr *MockServiceMockRecorder) PullRequestReassign(ctx, prID, oldUserID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PullRequestReassign", reflect.TypeOf((*MockService)(nil).PullRequestReassign), prID, oldUserID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PullRequestReassign", reflect.TypeOf((*MockService)(nil).PullRequestReassign), ctx, prID, oldUserID)
 }
 
 // UsersGetReview mocks base method.
-func (m *MockService) UsersGetReview(userID string) ([]models.PullRequestShort, error) {
+func (m *MockService) UsersGetReview(ctx context.Context, userID string) ([]models.PullRequestShort, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UsersGetReview", userID)
+	ret := m.ctrl.Call(m, "UsersGetReview", ctx, userID)
 	ret0, _ := ret[0].([]models.PullRequestShort)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // UsersGetReview indicates an expected call of UsersGetReview.
-func (mr *MockServiceMockRecorder) UsersGetReview(userID any) *gomock.Call {
+func (mr *MockServiceMockRecorder) UsersGetReview(ctx, userID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UsersGetReview", reflect.TypeOf((*MockService)(nil).UsersGetReview), userID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UsersGetReview", reflect.TypeOf((*MockService)(nil).UsersGetReview), ctx, userID)
 }
 
 // UsersSetIsActive mocks base method.
-func (m *MockService) UsersSetIsActive(userID string, isActive bool) (models.User, error) {
+func (m *MockService) UsersSetIsActive(ctx context.Context, userID string, isActive bool) (models.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UsersSetIsActive", userID, isActive)
+	ret := m.ctrl.Call(m, "UsersSetIsActive", ctx, userID, isActive)
 	ret0, _ := ret[0].(models.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // UsersSetIsActive indicates an expected call of UsersSetIsActive.
-func (mr *MockServiceMockRecorder) UsersSetIsActive(userID, isActive any) *gomock.Call {
+func (mr *MockServiceMockRecorder) UsersSetIsActive(ctx, userID, isActive any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UsersSetIsActive", reflect.TypeOf((*MockService)(nil).UsersSetIsActive), userID, isActive)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UsersSetIsActive", reflect.TypeOf((*MockService)(nil).UsersSetIsActive), ctx, userID, isActive)
 }

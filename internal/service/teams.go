@@ -1,13 +1,17 @@
 package service
 
-import "github.com/Sugyk/avito_test_task/internal/models"
+import (
+	"context"
 
-func (s *Service) CreateOrUpdateTeam(team *models.Team) (models.Team, error) {
+	"github.com/Sugyk/avito_test_task/internal/models"
+)
+
+func (s *Service) CreateOrUpdateTeam(ctx context.Context, team *models.Team) (models.Team, error) {
 	// TODO: implement the business logic to create or update a team
 	return models.Team{}, nil
 }
 
-func (s *Service) GetTeamWithMembers(teamName string) (models.Team, error) {
+func (s *Service) GetTeamWithMembers(ctx context.Context, teamName string) (models.Team, error) {
 	// TODO: implement the business logic to get a team
 	return models.Team{}, nil
 }

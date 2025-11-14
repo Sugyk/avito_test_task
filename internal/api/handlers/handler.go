@@ -3,19 +3,20 @@
 package handlers
 
 import (
+	"context"
 	"log/slog"
 
 	"github.com/Sugyk/avito_test_task/internal/models"
 )
 
 type Service interface {
-	CreateOrUpdateTeam(team *models.Team) (models.Team, error)
-	GetTeamWithMembers(teamName string) (models.Team, error)
-	UsersSetIsActive(userID string, isActive bool) (models.User, error)
-	PullRequestCreate(pr *models.PullRequest) (models.PullRequest, error)
-	PullRequestMerge(pr *models.PullRequest) (models.PullRequest, error)
-	PullRequestReassign(prID string, oldUserID string) (models.PullRequest, string, error)
-	UsersGetReview(userID string) ([]models.PullRequestShort, error)
+	CreateOrUpdateTeam(ctx context.Context, team *models.Team) (models.Team, error)
+	GetTeamWithMembers(ctx context.Context, teamName string) (models.Team, error)
+	UsersSetIsActive(ctx context.Context, userID string, isActive bool) (models.User, error)
+	PullRequestCreate(ctx context.Context, pr *models.PullRequest) (models.PullRequest, error)
+	PullRequestMerge(ctx context.Context, pr *models.PullRequest) (models.PullRequest, error)
+	PullRequestReassign(ctx context.Context, prID string, oldUserID string) (models.PullRequest, string, error)
+	UsersGetReview(ctx context.Context, userID string) ([]models.PullRequestShort, error)
 }
 
 type Handler struct {

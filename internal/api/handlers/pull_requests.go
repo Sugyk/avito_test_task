@@ -20,7 +20,7 @@ func (h *Handler) PullRequestCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// business logic
-	pr, err := h.service.PullRequestCreate(req.ToPullRequest())
+	pr, err := h.service.PullRequestCreate(r.Context(), req.ToPullRequest())
 	if err != nil {
 		// author/team not found
 		// TODO: differnet errors
@@ -49,7 +49,7 @@ func (h *Handler) PullRequestMerge(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// business logic
-	pr, err := h.service.PullRequestMerge(req.ToPullRequest())
+	pr, err := h.service.PullRequestMerge(r.Context(), req.ToPullRequest())
 	if err != nil {
 		// pr not found
 		// PR is already exists
@@ -140,7 +140,7 @@ func (h *Handler) PullRequestReassign(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// business logic
-	pr, replacedBy, err := h.service.PullRequestReassign(req.PullRequestId, req.OldReviewerId)
+	pr, replacedBy, err := h.service.PullRequestReassign(r.Context(), req.PullRequestId, req.OldReviewerId)
 	if err != nil {
 		// pr not found
 		// PR is already exists
