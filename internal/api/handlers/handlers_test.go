@@ -569,3 +569,155 @@ func TestPullRequestMerge_NotFound(t *testing.T) {
 
 	require.Equal(t, http.StatusBadRequest, w.Code)
 }
+
+func TestPullRequestReassign_Success(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockSvc := NewMockService(ctrl)
+	h := NewHandler(mockSvc, slog.Default())
+
+	reqBody := models.PullRequestReassignRequest{
+		PullRequestId: "pr-1001",
+		OldReviewerId: "u2",
+	}
+
+	body, _ := json.Marshal(reqBody)
+
+	expectedPR := models.PullRequest{
+		PullRequestId:     "pr-1001",
+		PullRequestName:   "Add search",
+		AuthorId:          "u1",
+		Status:            models.StatusOpen,
+		AssignedReviewers: []string{"u3", "u5"},
+	}
+
+	mockSvc.
+		EXPECT().
+		PullRequestReassign(reqBody.PullRequestId, reqBody.OldReviewerId).
+		Return(expectedPR, "u5", nil)
+
+	req := httptest.NewRequest(http.MethodPost, "/pullRequest/reassign", bytes.NewReader(body))
+	w := httptest.NewRecorder()
+
+	h.PullRequestReassign(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+
+	var resp models.PullRequestReassignResponse200
+	err := json.NewDecoder(w.Body).Decode(&resp)
+	require.NoError(t, err)
+	require.Equal(t, expectedPR, resp.Pr)
+	require.Equal(t, "u5", resp.ReplacedBy)
+}
+
+func TestPullRequestReassign_InvalidJSON(t *testing.T) {
+	h := NewHandler(nil, slog.Default())
+
+	req := httptest.NewRequest(http.MethodPost, "/pullRequest/reassign", bytes.NewBufferString("{invalid json"))
+	w := httptest.NewRecorder()
+
+	h.PullRequestReassign(w, req)
+
+	require.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestPullRequestReassign_InvalidInput(t *testing.T) {
+	h := NewHandler(nil, slog.Default())
+
+	tests := []struct {
+		name string
+		body string
+	}{
+		{
+			name: "missing pull_request_id",
+			body: `{"old_reviewer_id":"u1"}`,
+		},
+		{
+			name: "missing old_reviewer_id",
+			body: `{"pull_request_id":"pr-1"}`,
+		},
+		{
+			name: "empty fields",
+			body: `{"pull_request_id":"", "old_reviewer_id":""}`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodPost, "/pullRequest/reassign", bytes.NewBufferString(tt.body))
+			w := httptest.NewRecorder()
+
+			h.PullRequestReassign(w, req)
+
+			require.Equal(t, http.StatusBadRequest, w.Code)
+		})
+	}
+}
+
+func TestPullRequestReassign_NotFound(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockSvc := NewMockService(ctrl)
+	h := NewHandler(mockSvc, slog.Default())
+
+	reqBody := models.PullRequestReassignRequest{
+		PullRequestId: "unknown-pr",
+		OldReviewerId: "u777",
+	}
+
+	body, _ := json.Marshal(reqBody)
+
+	mockSvc.
+		EXPECT().
+		PullRequestReassign(reqBody.PullRequestId, reqBody.OldReviewerId).
+		Return(models.PullRequest{}, "", errors.New("not found"))
+
+	req := httptest.NewRequest(http.MethodPost, "/pullRequest/reassign", bytes.NewReader(body))
+	w := httptest.NewRecorder()
+
+	h.PullRequestReassign(w, req)
+
+	require.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestPullRequestReassign_DomainErrors(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockSvc := NewMockService(ctrl)
+	h := NewHandler(mockSvc, slog.Default())
+
+	cases := []struct {
+		name   string
+		svcErr error
+	}{
+		{"PR merged", errors.New("cannot reassign on merged PR")},
+		{"not assigned", errors.New("reviewer is not assigned to this PR")},
+		{"no candidate", errors.New("no active replacement candidate in team")},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+
+			reqBody := models.PullRequestReassignRequest{
+				PullRequestId: "pr-x",
+				OldReviewerId: "u5",
+			}
+			body, _ := json.Marshal(reqBody)
+
+			mockSvc.
+				EXPECT().
+				PullRequestReassign(reqBody.PullRequestId, reqBody.OldReviewerId).
+				Return(models.PullRequest{}, "", c.svcErr)
+
+			req := httptest.NewRequest(http.MethodPost, "/pullRequest/reassign", bytes.NewReader(body))
+			w := httptest.NewRecorder()
+
+			h.PullRequestReassign(w, req)
+
+			require.Equal(t, http.StatusBadRequest, w.Code)
+		})
+	}
+}

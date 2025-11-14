@@ -14,6 +14,7 @@ type Service interface {
 	UsersSetIsActive(userID string, isActive bool) (models.User, error)
 	PullRequestCreate(pr *models.PullRequest) (models.PullRequest, error)
 	PullRequestMerge(pr *models.PullRequest) (models.PullRequest, error)
+	PullRequestReassign(prID string, oldUserID string) (models.PullRequest, string, error)
 }
 
 type Handler struct {

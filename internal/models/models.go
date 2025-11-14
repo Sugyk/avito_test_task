@@ -190,3 +190,23 @@ func (p *PullRequestMergeRequest) ToPullRequest() *PullRequest {
 type PullRequestMergeResponse200 struct {
 	Pr PullRequest `json:"pr"`
 }
+
+type PullRequestReassignRequest struct {
+	PullRequestId string `json:"pull_request_id"`
+	OldReviewerId string `json:"old_reviewer_id"`
+}
+
+func (p *PullRequestReassignRequest) Validate() error {
+	if p.PullRequestId == "" {
+		return fmt.Errorf("%w: pull_request_id is required", nil) // TODO: insert error
+	}
+	if p.OldReviewerId == "" {
+		return fmt.Errorf("%w: old_reviewer_id is required", nil) // TODO: insert error
+	}
+	return nil
+}
+
+type PullRequestReassignResponse200 struct {
+	Pr         PullRequest `json:"pr"`
+	ReplacedBy string      `json:"replaced_by"`
+}
