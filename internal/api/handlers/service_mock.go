@@ -69,3 +69,18 @@ func (mr *MockServiceMockRecorder) GetTeamWithMembers(teamName any) *gomock.Call
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTeamWithMembers", reflect.TypeOf((*MockService)(nil).GetTeamWithMembers), teamName)
 }
+
+// UsersSetIsActive mocks base method.
+func (m *MockService) UsersSetIsActive(userID string, isActive bool) (models.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UsersSetIsActive", userID, isActive)
+	ret0, _ := ret[0].(models.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UsersSetIsActive indicates an expected call of UsersSetIsActive.
+func (mr *MockServiceMockRecorder) UsersSetIsActive(userID, isActive any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UsersSetIsActive", reflect.TypeOf((*MockService)(nil).UsersSetIsActive), userID, isActive)
+}

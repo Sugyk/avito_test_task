@@ -217,3 +217,83 @@ func TestTeamGet_MissingTeamName(t *testing.T) {
 
 	require.Equal(t, http.StatusBadRequest, resp.StatusCode)
 }
+func TestUsersSetIsActive_Success(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockService := NewMockService(ctrl)
+	h := NewHandler(mockService, slog.Default())
+
+	reqBody := models.UsersSetIsActiveRequest{
+		UserId:   "u2",
+		IsActive: false,
+	}
+	body, _ := json.Marshal(reqBody)
+	req := httptest.NewRequest(http.MethodPost, "/users/setIsActive", bytes.NewReader(body))
+	w := httptest.NewRecorder()
+
+	expectedUser := models.User{
+		UserId:   "u2",
+		Username: "Bob",
+		TeamName: "backend",
+		IsActive: false,
+	}
+
+	mockService.EXPECT().UsersSetIsActive(reqBody.UserId, reqBody.IsActive).Return(expectedUser, nil)
+
+	h.UsersSetIsActive(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+
+	var resp models.UsersSerIsActiveResponse200
+	err := json.NewDecoder(w.Body).Decode(&resp)
+	require.NoError(t, err)
+	require.Equal(t, expectedUser, resp.User)
+}
+
+func TestUsersSetIsActive_InvalidInput(t *testing.T) {
+	h := NewHandler(nil, slog.Default())
+
+	tests := []struct {
+		name string
+		body string
+	}{
+		{name: "invalid JSON", body: "{invalid json"},
+		{name: "empty user_id", body: `{"user_id": "" , "is_active": true}`},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodPost, "/users/setIsActive", bytes.NewReader([]byte(tt.body)))
+			w := httptest.NewRecorder()
+
+			h.UsersSetIsActive(w, req)
+
+			require.Equal(t, http.StatusBadRequest, w.Code)
+		})
+	}
+}
+
+func TestUsersSetIsActive_UserNotFound(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockService := NewMockService(ctrl)
+	h := NewHandler(mockService, slog.Default())
+
+	reqBody := models.UsersSetIsActiveRequest{
+		UserId:   "nonexistent",
+		IsActive: true,
+	}
+	body, _ := json.Marshal(reqBody)
+	req := httptest.NewRequest(http.MethodPost, "/users/setIsActive", bytes.NewReader(body))
+	w := httptest.NewRecorder()
+
+	mockService.EXPECT().
+		UsersSetIsActive(reqBody.UserId, reqBody.IsActive).
+		Return(models.User{}, errors.New("user not found"))
+
+	h.UsersSetIsActive(w, req)
+
+	require.Equal(t, http.StatusNotFound, w.Code)
+}

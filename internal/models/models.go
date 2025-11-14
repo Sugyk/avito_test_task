@@ -38,6 +38,13 @@ func (t *Team) Validate() error {
 	return nil
 }
 
+type User struct {
+	UserId   string `json:"user_id"`
+	Username string `json:"username"`
+	TeamName string `json:"team_name"`
+	IsActive bool   `json:"is_active"`
+}
+
 type TeamAddRequest struct {
 	Team Team `json:"team"`
 }
@@ -55,4 +62,20 @@ type TeamAddResponse200 struct {
 
 type TeamGetResponse200 struct {
 	Team Team `json:"team"`
+}
+
+type UsersSetIsActiveRequest struct {
+	UserId   string `json:"user_id"`
+	IsActive bool   `json:"is_active"`
+}
+
+func (u *UsersSetIsActiveRequest) Validate() error {
+	if u.UserId == "" {
+		return fmt.Errorf("%w: user_id is required", nil) // TODO: insert error
+	}
+	return nil
+}
+
+type UsersSerIsActiveResponse200 struct {
+	User User `json:"user"`
 }

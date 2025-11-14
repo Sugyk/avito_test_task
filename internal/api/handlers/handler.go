@@ -11,6 +11,7 @@ import (
 type Service interface {
 	CreateOrUpdateTeam(team *models.Team) (models.Team, error)
 	GetTeamWithMembers(teamName string) (models.Team, error)
+	UsersSetIsActive(userID string, isActive bool) (models.User, error)
 }
 
 type Handler struct {
