@@ -16,6 +16,8 @@ CREATE TABLE IF NOT EXISTS PullRequests(
     author_id INTEGER REFERENCES Users(id),
     status TEXT,
     needMoreReviewers BOOLEAN
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    merged_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS PullRequestsUsers(
