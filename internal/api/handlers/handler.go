@@ -2,9 +2,12 @@ package handlers
 
 import (
 	"log/slog"
+
+	"github.com/Sugyk/avito_test_task/internal/models"
 )
 
 type Service interface {
+	CreateOrUpdateTeam(team *models.Team) (models.Team, error)
 }
 
 type Handler struct {
