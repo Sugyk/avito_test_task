@@ -1,16 +1,17 @@
 package repository
 
 import (
-	"database/sql"
 	"log/slog"
+
+	"github.com/jmoiron/sqlx"
 )
 
 type Repository struct {
-	db     *sql.DB
+	db     *sqlx.DB
 	logger *slog.Logger
 }
 
-func NewRepository(db *sql.DB, logger *slog.Logger) *Repository {
+func NewRepository(db *sqlx.DB, logger *slog.Logger) *Repository {
 	return &Repository{
 		db,
 		logger,

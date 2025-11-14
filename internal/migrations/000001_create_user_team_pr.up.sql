@@ -1,27 +1,29 @@
+CREATE TYPE pr_status AS ENUM ('OPEN', 'MERGED');
+
 CREATE TABLE IF NOT EXISTS Teams(
-    id SERIAL PRIMARY KEY,
-    name TEXT UNIQUE
+    id VARCHAR PRIMARY KEY,
+    name VARCHAR UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS Users(
-    id SERIAL PRIMARY KEY,
+    id VARCHAR PRIMARY KEY,
     name TEXT,
-    team_id INTEGER REFERENCES Teams(id),
+    team_id VARCHAR REFERENCES Teams(id),
     isActive BOOLEAN
 );
 
 CREATE TABLE IF NOT EXISTS PullRequests(
-    id SERIAL PRIMARY KEY,
+    id VARCHAR PRIMARY KEY,
     title TEXT,
-    author_id INTEGER REFERENCES Users(id),
-    status TEXT,
-    needMoreReviewers BOOLEAN
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    merged_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    author_id VARCHAR REFERENCES Users(id),
+    status pr_status NOT NULL DEFAULT 'OPEN',
+    needMoreReviewers BOOLEAN,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    merged_at TIMESTAMP DEFAULT NULL
 );
 
 CREATE TABLE IF NOT EXISTS PullRequestsUsers(
-    id SERIAL PRIMARY KEY,
-    pr_id INTEGER REFERENCES PullRequests(id),
-    user_id INTEGER REFERENCES Users(id)
+    id VARCHAR PRIMARY KEY,
+    pr_id VARCHAR REFERENCES PullRequests(id),
+    user_id VARCHAR REFERENCES Users(id)
 );

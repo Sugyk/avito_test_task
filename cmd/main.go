@@ -24,7 +24,7 @@ func run() error {
 	)
 
 	app := application.NewApplication()
-	if err := app.Start(); err != nil {
+	if err := app.Start(ctx); err != nil {
 		log.Fatalln("can not start application:", err)
 	}
 

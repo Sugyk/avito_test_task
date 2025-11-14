@@ -1,18 +1,19 @@
 package database
 
 import (
-	"database/sql"
+	"context"
 	"fmt"
 	"os"
 
 	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/postgres"
+	"github.com/golang-migrate/migrate/v4/database/pgx"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-
-	_ "github.com/lib/pq"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/stdlib"
+	"github.com/jmoiron/sqlx"
 )
 
-func NewDbConnection() (*sql.DB, error) {
+func NewDbConnection(ctx context.Context) (*sqlx.DB, error) {
 	connStr := fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
 		os.Getenv("DB_USERNAME"),
@@ -22,19 +23,22 @@ func NewDbConnection() (*sql.DB, error) {
 		os.Getenv("DB_NAME"),
 		os.Getenv("DB_SSLMODE"),
 	)
-	db, err := sql.Open("postgres", connStr)
+
+	pool, err := pgxpool.New(ctx, connStr)
 	if err != nil {
 		return nil, err
 	}
-	err = db.Ping()
-	if err != nil {
+
+	if err := pool.Ping(ctx); err != nil {
 		return nil, err
 	}
+
+	db := sqlx.NewDb(stdlib.OpenDBFromPool(pool), "pgx")
 	return db, nil
 }
 
-func RunMigrations(db *sql.DB) error {
-	driver, err := postgres.WithInstance(db, &postgres.Config{})
+func RunMigrations(db *sqlx.DB) error {
+	driver, err := pgx.WithInstance(db.DB, &pgx.Config{})
 	if err != nil {
 		return err
 	}
