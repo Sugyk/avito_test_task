@@ -10,6 +10,7 @@ import (
 
 type Service interface {
 	CreateOrUpdateTeam(team *models.Team) (models.Team, error)
+	GetTeamWithMembers(teamName string) (models.Team, error)
 }
 
 type Handler struct {

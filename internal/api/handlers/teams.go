@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/Sugyk/avito_test_task/internal/models"
@@ -32,4 +33,27 @@ func (h *Handler) TeamAdd(w http.ResponseWriter, r *http.Request) {
 	}
 	// send response
 	h.sendJSON(w, http.StatusCreated, resp)
+}
+
+func (h *Handler) TeamGet(w http.ResponseWriter, r *http.Request) {
+	// extract query params
+	teamName := r.URL.Query().Get("team_name")
+	// validate params
+	if teamName == "" {
+		h.sendError(w, http.StatusBadRequest, models.InvalidInputErrorCode, errors.New("missing team_name"))
+		return
+	}
+	// business logic
+	team, err := h.service.GetTeamWithMembers(teamName)
+	if err != nil {
+		// team not found
+		h.sendError(w, http.StatusNotFound, models.NotFoundErrorCode, err)
+		return
+	}
+	// create response
+	resp := models.TeamGetResponse200{
+		Team: team,
+	}
+	// send response
+	h.sendJSON(w, http.StatusOK, resp)
 }

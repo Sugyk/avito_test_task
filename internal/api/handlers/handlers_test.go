@@ -36,7 +36,7 @@ func TestTeamAdd_Success(t *testing.T) {
 	h := NewHandler(mockService, nil)
 
 	body, _ := json.Marshal(models.TeamAddRequest{Team: teamInput})
-	req := httptest.NewRequest(http.MethodPost, "/teams/add", bytes.NewReader(body))
+	req := httptest.NewRequest(http.MethodPost, "/team/add", bytes.NewReader(body))
 	w := httptest.NewRecorder()
 
 	h.TeamAdd(w, req)
@@ -57,7 +57,7 @@ func TestTeamAdd_InvalidJSON(t *testing.T) {
 
 	h := NewHandler(nil, slog.Default())
 
-	req := httptest.NewRequest(http.MethodPost, "/teams/add", bytes.NewBufferString("{invalid json"))
+	req := httptest.NewRequest(http.MethodPost, "/team/add", bytes.NewBufferString("{invalid json"))
 	w := httptest.NewRecorder()
 
 	h.TeamAdd(w, req)
@@ -95,7 +95,7 @@ func TestTeamAdd_InvalidInput(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req := httptest.NewRequest(http.MethodPost, "/teams/add", bytes.NewBufferString(tt.body))
+			req := httptest.NewRequest(http.MethodPost, "/team/add", bytes.NewBufferString(tt.body))
 			w := httptest.NewRecorder()
 
 			h.TeamAdd(w, req)
@@ -121,15 +121,99 @@ func TestTeamAdd_TeamExists(t *testing.T) {
 	mockService.
 		EXPECT().
 		CreateOrUpdateTeam(&teamInput).
-		Return(models.Team{}, errors.New("team already exists"))
+		Return(models.Team{}, errors.New("team_name already exists"))
 
 	h := NewHandler(mockService, slog.Default())
 
 	body, _ := json.Marshal(models.TeamAddRequest{Team: teamInput})
-	req := httptest.NewRequest(http.MethodPost, "/teams/add", bytes.NewReader(body))
+	req := httptest.NewRequest(http.MethodPost, "/team/add", bytes.NewReader(body))
 	w := httptest.NewRecorder()
 
 	h.TeamAdd(w, req)
 
 	require.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestTeamGet_Success(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockService := NewMockService(ctrl)
+
+	testTeamName := "backend"
+
+	expectedTeam := models.Team{
+		TeamName: "backend",
+		Members: []models.TeamMember{
+			{
+				User_id:  "u1",
+				Username: "Alice",
+				IsActive: true,
+			},
+			{
+				User_id:  "u2",
+				Username: "Bob",
+				IsActive: true,
+			},
+		},
+	}
+	mockService.
+		EXPECT().
+		GetTeamWithMembers(testTeamName).
+		Return(expectedTeam, nil)
+
+	h := NewHandler(mockService, slog.Default())
+
+	req := httptest.NewRequest(http.MethodGet, "/team/get?team_name="+testTeamName, nil)
+	w := httptest.NewRecorder()
+
+	h.TeamGet(w, req)
+
+	resp := w.Result()
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+
+	var out models.TeamAddResponse200
+	err := json.NewDecoder(resp.Body).Decode(&out)
+	require.NoError(t, err)
+	require.Equal(t, out.Team, expectedTeam)
+}
+
+func TestTeamGet_NotFound(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	testTeamName := "unknown"
+
+	mockSvc := NewMockService(ctrl)
+	// Expect call with "unknown" and return error
+	mockSvc.
+		EXPECT().
+		GetTeamWithMembers(testTeamName).
+		Return(models.Team{}, errors.New("not found"))
+
+	h := NewHandler(mockSvc, slog.Default())
+
+	req := httptest.NewRequest(http.MethodGet, "/team/get?team_name="+testTeamName, nil)
+	w := httptest.NewRecorder()
+
+	h.TeamGet(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	require.Equal(t, http.StatusNotFound, resp.StatusCode)
+}
+
+func TestTeamGet_MissingTeamName(t *testing.T) {
+	h := NewHandler(nil, slog.Default())
+
+	req := httptest.NewRequest(http.MethodGet, "/team/get", nil)
+	w := httptest.NewRecorder()
+
+	h.TeamGet(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	require.Equal(t, http.StatusBadRequest, resp.StatusCode)
 }

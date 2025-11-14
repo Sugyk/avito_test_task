@@ -54,3 +54,18 @@ func (mr *MockServiceMockRecorder) CreateOrUpdateTeam(team any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrUpdateTeam", reflect.TypeOf((*MockService)(nil).CreateOrUpdateTeam), team)
 }
+
+// GetTeamWithMembers mocks base method.
+func (m *MockService) GetTeamWithMembers(teamName string) (models.Team, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTeamWithMembers", teamName)
+	ret0, _ := ret[0].(models.Team)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTeamWithMembers indicates an expected call of GetTeamWithMembers.
+func (mr *MockServiceMockRecorder) GetTeamWithMembers(teamName any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTeamWithMembers", reflect.TypeOf((*MockService)(nil).GetTeamWithMembers), teamName)
+}

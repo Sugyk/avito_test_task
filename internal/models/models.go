@@ -38,55 +38,6 @@ func (t *Team) Validate() error {
 	return nil
 }
 
-// /team/add:
-//
-//	post:
-//	  tags: [Teams]
-//	  summary: Создать команду с участниками (создаёт/обновляет пользователей)
-//	  requestBody:
-//	    required: true
-//	    content:
-//	      application/json:
-//	        schema:
-//	          $ref: '#/components/schemas/Team'
-//	        example:
-//	          team_name: payments
-//	          members:
-//	            - user_id: u1
-//	              username: Alice
-//	              is_active: true
-//	            - user_id: u2
-//	              username: Bob
-//	              is_active: true
-//	  responses:
-//	    '201':
-//	      description: Команда создана
-//	      content:
-//	        application/json:
-//	          schema:
-//	            type: object
-//	            properties:
-//	              team:
-//	                $ref: '#/components/schemas/Team'
-//	          example:
-//	            team:
-//	              team_name: backend
-//	              members:
-//	                - user_id: u1
-//	                  username: Alice
-//	                  is_active: true
-//	                - user_id: u2
-//	                  username: Bob
-//	                  is_active: true
-//	    '400':
-//	      description: Команда уже существует
-//	      content:
-//	        application/json:
-//	          schema: { $ref: '#/components/schemas/ErrorResponse' }
-//	          example:
-//	            error:
-//	              code: TEAM_EXISTS
-//	              message: team_name already exists
 type TeamAddRequest struct {
 	Team Team `json:"team"`
 }
@@ -99,5 +50,9 @@ func (t *TeamAddRequest) Validate() error {
 }
 
 type TeamAddResponse200 struct {
+	Team Team `json:"team"`
+}
+
+type TeamGetResponse200 struct {
 	Team Team `json:"team"`
 }
