@@ -57,6 +57,10 @@ func (a *Application) Start(ctx context.Context) error {
 		return fmt.Errorf("init router: %w", err)
 	}
 
+	if err := a.migrate(); err != nil {
+		return fmt.Errorf("migration error: %w", err)
+	}
+
 	a.startHTTPServer()
 
 	a.logger.Info("application started successfully")
@@ -87,6 +91,14 @@ func (a *Application) initDatabase(ctx context.Context) error {
 	a.db = db
 
 	a.logger.Info("database connection established")
+	return nil
+}
+
+func (a *Application) migrate() error {
+	if err := database.RunMigrations(a.db); err != nil {
+		return fmt.Errorf("database migration: %w", err)
+	}
+	a.logger.Info("migrated successfully")
 	return nil
 }
 
