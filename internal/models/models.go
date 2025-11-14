@@ -10,10 +10,10 @@ type TeamMember struct {
 
 func (t *TeamMember) Validate() error {
 	if t.User_id == "" {
-		return fmt.Errorf("%w: user_id is required", nil) // TODO: insert error
+		return fmt.Errorf("user_id is required")
 	}
 	if t.Username == "" {
-		return fmt.Errorf("%w: username is required", nil) // TODO: insert error
+		return fmt.Errorf("username is required")
 	}
 	return nil
 }
@@ -25,14 +25,14 @@ type Team struct {
 
 func (t *Team) Validate() error {
 	if t.TeamName == "" {
-		return fmt.Errorf("%w: name is required", nil) // TODO: insert error
+		return fmt.Errorf("name is required")
 	}
 	if len(t.Members) == 0 {
-		return fmt.Errorf("%w: name is required", nil) // TODO: insert error
+		return fmt.Errorf("Team must contain at least one member")
 	}
-	for _, member := range t.Members {
-		if member.Validate() != nil {
-			return fmt.Errorf("%w: invalid team member", nil) // TODO: insert error
+	for i, member := range t.Members {
+		if err := member.Validate(); err != nil {
+			return fmt.Errorf("invalid team member %d: %w", i, err)
 		}
 	}
 	return nil
@@ -51,7 +51,7 @@ type TeamAddRequest struct {
 
 func (t *TeamAddRequest) Validate() error {
 	if err := t.Team.Validate(); err != nil {
-		return fmt.Errorf("%w: invalid team data", nil) // TODO: insert error
+		return fmt.Errorf("invalid team data: %w", err)
 	}
 	return nil
 }
@@ -79,56 +79,6 @@ func (u *UsersSetIsActiveRequest) Validate() error {
 type UsersSerIsActiveResponse200 struct {
 	User User `json:"user"`
 }
-
-// /pullRequest/create:
-//
-//	post:
-//	  tags: [PullRequests]
-//	  summary: Создать PR и автоматически назначить до 2 ревьюверов из команды автора
-//	  requestBody:
-//	    required: true
-//	    content:
-//	      application/json:
-//	        schema:
-//	          type: object
-//	          required: [ pull_request_id, pull_request_name, author_id ]
-//	          properties:
-//	            pull_request_id: { type: string }
-//	            pull_request_name: { type: string }
-//	            author_id: { type: string }
-//	        example:
-//	          pull_request_id: pr-1001
-//	          pull_request_name: Add search
-//	          author_id: u1
-//	  responses:
-//	    '201':
-//	      description: PR создан
-//	      content:
-//	        application/json:
-//	          schema:
-//	            type: object
-//	            properties:
-//	              pr:
-//	                $ref: '#/components/schemas/PullRequest'
-//	          example:
-//	            pr:
-//	              pull_request_id: pr-1001
-//	              pull_request_name: Add search
-//	              author_id: u1
-//	              status: OPEN
-//	              assigned_reviewers: [u2, u3]
-//	    '404':
-//	      description: Автор/команда не найдены
-//	      content:
-//	        application/json:
-//	          schema: { $ref: '#/components/schemas/ErrorResponse' }
-//	    '409':
-//	      description: PR уже существует
-//	      content:
-//	        application/json:
-//	          schema: { $ref: '#/components/schemas/ErrorResponse' }
-//	          example:
-//	            error: { code: PR_EXISTS, message: PR id already exists }
 
 type PullRequest struct {
 	PullRequestId     string   `json:"pull_request_id"`

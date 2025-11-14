@@ -1,5 +1,7 @@
 package models
 
+import "errors"
+
 var (
 	TeamExistsErrorCode   = "TEAM_EXISTS"
 	PrExistsErrorCode     = "PR_EXISTS"
@@ -8,6 +10,12 @@ var (
 	NoCandidateErrorCode  = "NO_CANDIDATE"
 	NotFoundErrorCode     = "NOT_FOUND"
 	InvalidInputErrorCode = "INVALID_INPUT"
+	InternalErrorCode     = "INTERNAL_ERROR"
+)
+
+var (
+	ErrTeamExists    = errors.New("team_name already exists")
+	ErrInternalError = errors.New("internal server error")
 )
 
 type Error struct {
