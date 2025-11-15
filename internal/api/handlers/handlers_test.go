@@ -123,7 +123,7 @@ func TestTeamAdd_TeamExists(t *testing.T) {
 	mockService.
 		EXPECT().
 		CreateOrUpdateTeam(req.Context(), teamInput).
-		Return(&models.Team{}, errors.New("team_name already exists"))
+		Return(nil, models.ErrTeamExists)
 
 	h := NewHandler(mockService, slog.Default())
 
@@ -232,7 +232,7 @@ func TestUsersSetIsActive_Success(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/users/setIsActive", bytes.NewReader(body))
 	w := httptest.NewRecorder()
 
-	expectedUser := models.User{
+	expectedUser := &models.User{
 		UserId:   "u2",
 		Username: "Bob",
 		TeamName: "backend",
@@ -248,7 +248,7 @@ func TestUsersSetIsActive_Success(t *testing.T) {
 	var resp models.UsersSerIsActiveResponse200
 	err := json.NewDecoder(w.Body).Decode(&resp)
 	require.NoError(t, err)
-	require.Equal(t, expectedUser, resp.User)
+	require.Equal(t, *expectedUser, resp.User)
 }
 
 func TestUsersSetIsActive_InvalidInput(t *testing.T) {
@@ -291,7 +291,7 @@ func TestUsersSetIsActive_UserNotFound(t *testing.T) {
 
 	mockService.EXPECT().
 		UsersSetIsActive(req.Context(), reqBody.UserId, reqBody.IsActive).
-		Return(models.User{}, errors.New("user not found"))
+		Return(nil, models.ErrUserNotFound)
 
 	h.UsersSetIsActive(w, req)
 

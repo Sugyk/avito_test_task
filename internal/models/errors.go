@@ -17,6 +17,7 @@ var (
 	ErrTeamExists    = errors.New("team_name already exists")
 	ErrInternalError = errors.New("internal server error")
 	ErrTeamNotFound  = errors.New("team_name not found")
+	ErrUserNotFound  = errors.New("user not found")
 )
 
 type Error struct {

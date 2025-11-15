@@ -65,12 +65,17 @@ func (h *Handler) UsersSetIsActive(w http.ResponseWriter, r *http.Request) {
 	user, err := h.service.UsersSetIsActive(r.Context(), req.UserId, req.IsActive)
 	if err != nil {
 		// user not found
-		h.sendError(w, http.StatusNotFound, models.NotFoundErrorCode, err)
+		if errors.Is(err, models.ErrUserNotFound) {
+			h.sendError(w, http.StatusNotFound, models.NotFoundErrorCode, err)
+			return
+		}
+		h.logger.Error("internal error", "error", err.Error())
+		h.sendError(w, http.StatusInternalServerError, models.InternalErrorCode, models.ErrInternalError)
 		return
 	}
 	// create response
 	resp := models.UsersSerIsActiveResponse200{
-		User: user,
+		User: *user,
 	}
 	// send response
 	h.sendJSON(w, http.StatusOK, resp)

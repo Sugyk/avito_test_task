@@ -10,6 +10,7 @@ import (
 type Repository interface {
 	CreateOrUpdateTeam(ctx context.Context, team *models.Team) (*models.Team, error)
 	GetTeam(ctx context.Context, teamName string) (*models.Team, error)
+	UsersSetIsActive(ctx context.Context, userID string, isActive bool) (*models.User, error)
 }
 
 type Service struct {

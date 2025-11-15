@@ -6,9 +6,12 @@ import (
 	"github.com/Sugyk/avito_test_task/internal/models"
 )
 
-func (s *Service) UsersSetIsActive(ctx context.Context, userID string, isActive bool) (models.User, error) {
-	// TODO: implement the business logic to set user's active status
-	return models.User{}, nil
+func (s *Service) UsersSetIsActive(ctx context.Context, userID string, isActive bool) (*models.User, error) {
+	updatedUser, err := s.repo.UsersSetIsActive(ctx, userID, isActive)
+	if err != nil {
+		return nil, err
+	}
+	return updatedUser, nil
 }
 
 func (s *Service) UsersGetReview(ctx context.Context, userID string) ([]models.PullRequestShort, error) {

@@ -28,11 +28,9 @@ func (h *Handler) TeamAdd(w http.ResponseWriter, r *http.Request) {
 			h.sendError(w, http.StatusBadRequest, models.TeamExistsErrorCode, err)
 			return
 		}
-		if errors.Is(err, models.ErrInternalError) {
-			h.logger.Error("internal error", "error", err.Error())
-			h.sendError(w, http.StatusInternalServerError, models.TeamExistsErrorCode, err)
-			return
-		}
+		h.logger.Error("internal error", "error", err.Error())
+		h.sendError(w, http.StatusInternalServerError, models.InternalErrorCode, models.ErrInternalError)
+		return
 	}
 	// create response
 	resp := models.TeamAddResponse200{

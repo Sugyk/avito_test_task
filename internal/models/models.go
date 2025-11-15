@@ -39,10 +39,10 @@ func (t *Team) Validate() error {
 }
 
 type User struct {
-	UserId   string `json:"user_id"`
-	Username string `json:"username"`
-	TeamName string `json:"team_name"`
-	IsActive bool   `json:"is_active"`
+	UserId   string `json:"user_id" db:"id"`
+	Username string `json:"username" db:"name"`
+	TeamName string `json:"team_name" db:"team_name"`
+	IsActive bool   `json:"is_active" db:"isactive"`
 }
 
 type TeamAddRequest struct {

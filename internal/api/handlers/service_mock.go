@@ -133,10 +133,10 @@ func (mr *MockServiceMockRecorder) UsersGetReview(ctx, userID any) *gomock.Call 
 }
 
 // UsersSetIsActive mocks base method.
-func (m *MockService) UsersSetIsActive(ctx context.Context, userID string, isActive bool) (models.User, error) {
+func (m *MockService) UsersSetIsActive(ctx context.Context, userID string, isActive bool) (*models.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UsersSetIsActive", ctx, userID, isActive)
-	ret0, _ := ret[0].(models.User)
+	ret0, _ := ret[0].(*models.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
