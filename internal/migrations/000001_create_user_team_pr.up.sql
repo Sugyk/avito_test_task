@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS PullRequests(
 );
 
 CREATE TABLE IF NOT EXISTS PullRequestsUsers(
-    id VARCHAR PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     pr_id VARCHAR REFERENCES PullRequests(id),
     user_id VARCHAR REFERENCES Users(id)
 );
