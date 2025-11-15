@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"math/rand"
+	"time"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/Sugyk/avito_test_task/internal/models"
@@ -98,17 +99,60 @@ func (r *Repository) CreatePullRequestAndAssignReviewers(ctx context.Context, pu
 	}
 
 	reviewers_ids := getTwoRandomIds(activeTeamMembersIds)
-	insertReviewersBuilder := squirrel.Insert("PullRequestsUsers").Columns("pr_id", "user_id")
-	for _, id := range reviewers_ids {
-		insertReviewersBuilder.Values(prID, id)
-	}
+	if len(reviewers_ids) > 0 {
 
-	insertReviewersQuery, args, err := insertReviewersBuilder.PlaceholderFormat(squirrel.Dollar).ToSql()
+		insertReviewersBuilder := squirrel.Insert("PullRequestsUsers").Columns("pr_id", "user_id")
+		for _, id := range reviewers_ids {
+			insertReviewersBuilder = insertReviewersBuilder.Values(pullRequest.PullRequestId, id)
+		}
 
-	_, err = tx.ExecContext(ctx, insertReviewersQuery, args...)
-	if err != nil {
-		return nil, fmt.Errorf("db: error insert reviewers: %w", err)
+		insertReviewersQuery, args, _ := insertReviewersBuilder.PlaceholderFormat(squirrel.Dollar).ToSql()
+		_, err = tx.ExecContext(ctx, insertReviewersQuery, args...)
+		if err != nil {
+			return nil, fmt.Errorf("db: error insert reviewers: %w", err)
+		}
 	}
 	resultPr.AssignedReviewers = reviewers_ids
 	return resultPr, nil
+}
+
+func (r *Repository) MergePullRequest(ctx context.Context, prID string) (*models.PullRequest, error) {
+	var pr models.PullRequest
+	getQuery := `SELECT id, title, author_id, status FROM PullRequests WHERE id = $1`
+	err := r.db.GetContext(ctx, &pr, getQuery, prID)
+	if err == sql.ErrNoRows {
+		return nil, models.ErrPRNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("db: error retrieving team: %w", err)
+	}
+
+	membersQuery := `
+		SELECT user_id 
+		FROM PullRequestsUsers 
+		WHERE pr_id = $1
+	`
+
+	reviewers := make([]string, 0)
+
+	err = r.db.SelectContext(ctx, &reviewers, membersQuery, prID)
+	if err != nil {
+		return nil, fmt.Errorf("db: error retrieving reviewers: %w", err)
+	}
+	pr.AssignedReviewers = reviewers
+
+	merged_time := time.Now()
+
+	updateMemberQuery := `
+		UPDATE PullRequests
+		SET status = 'MERGED', merged_at = $1
+		WHERE id = $2
+		RETURNING status, merged_at
+	`
+	err = r.db.GetContext(ctx, &pr, updateMemberQuery, merged_time, prID)
+	if err != nil {
+		return nil, fmt.Errorf("db: error updating team members: %w", err)
+	}
+
+	return &pr, nil
 }

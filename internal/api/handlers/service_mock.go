@@ -87,10 +87,10 @@ func (mr *MockServiceMockRecorder) PullRequestCreate(ctx, pr any) *gomock.Call {
 }
 
 // PullRequestMerge mocks base method.
-func (m *MockService) PullRequestMerge(ctx context.Context, pr *models.PullRequest) (models.PullRequest, error) {
+func (m *MockService) PullRequestMerge(ctx context.Context, pr *models.PullRequest) (*models.PullRequest, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "PullRequestMerge", ctx, pr)
-	ret0, _ := ret[0].(models.PullRequest)
+	ret0, _ := ret[0].(*models.PullRequest)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

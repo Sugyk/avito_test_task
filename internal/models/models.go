@@ -87,10 +87,10 @@ type PullRequest struct {
 	PullRequestId     string   `json:"pull_request_id" db:"id"`
 	PullRequestName   string   `json:"pull_request_name" db:"title"`
 	AuthorId          string   `json:"author_id" db:"author_id"`
-	Status            Status   `json:"status"`
+	Status            Status   `json:"status" db:"status"`
 	AssignedReviewers []string `json:"assigned_reviewers"`
-	CreatedAt         *string  `json:"createdAt,omitempty"`
-	MergedAt          *string  `json:"mergedAt,omitempty"`
+	CreatedAt         *string  `json:"createdAt,omitempty" db:"created_at"`
+	MergedAt          *string  `json:"mergedAt,omitempty" db:"merged_at"`
 }
 
 type PullRequestCreateRequest struct {

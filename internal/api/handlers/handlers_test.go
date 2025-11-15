@@ -482,7 +482,7 @@ func TestPullRequestMerge_Success(t *testing.T) {
 		return &v
 	}()
 
-	expectedPR := models.PullRequest{
+	expectedPR := &models.PullRequest{
 		PullRequestId:     "pr-1001",
 		PullRequestName:   "Add search",
 		AuthorId:          "u1",
@@ -506,7 +506,7 @@ func TestPullRequestMerge_Success(t *testing.T) {
 	var resp models.PullRequestMergeResponse200
 	err := json.NewDecoder(w.Body).Decode(&resp)
 	require.NoError(t, err)
-	require.Equal(t, expectedPR, resp.Pr)
+	require.Equal(t, *expectedPR, resp.Pr)
 }
 
 func TestPullRequestMerge_InvalidJSON(t *testing.T) {
@@ -564,13 +564,13 @@ func TestPullRequestMerge_NotFound(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/pullRequest/merge", bytes.NewReader(body))
 	mockSvc.EXPECT().
 		PullRequestMerge(req.Context(), reqBody.ToPullRequest()).
-		Return(models.PullRequest{}, errors.New("PR not found"))
+		Return(nil, models.ErrPRNotFound)
 
 	w := httptest.NewRecorder()
 
 	h.PullRequestMerge(w, req)
 
-	require.Equal(t, http.StatusBadRequest, w.Code)
+	require.Equal(t, http.StatusNotFound, w.Code)
 }
 
 func TestPullRequestReassign_Success(t *testing.T) {

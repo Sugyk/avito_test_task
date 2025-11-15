@@ -14,9 +14,12 @@ func (s *Service) PullRequestCreate(ctx context.Context, pr *models.PullRequest)
 	return createdPR, nil
 }
 
-func (s *Service) PullRequestMerge(ctx context.Context, pr *models.PullRequest) (models.PullRequest, error) {
-	// TODO: implement the business logic to merge a pull request
-	return models.PullRequest{}, nil
+func (s *Service) PullRequestMerge(ctx context.Context, pr *models.PullRequest) (*models.PullRequest, error) {
+	mergedPR, err := s.repo.MergePullRequest(ctx, pr.PullRequestId)
+	if err != nil {
+		return nil, err
+	}
+	return mergedPR, nil
 }
 
 func (s *Service) PullRequestReassign(ctx context.Context, prID string, oldUserID string) (models.PullRequest, string, error) {

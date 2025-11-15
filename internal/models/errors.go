@@ -20,6 +20,7 @@ var (
 	ErrUserNotFound    = errors.New("user not found")
 	ErrPRAlreadyExists = errors.New("PR id already exists")
 	ErrAuthorNotFound  = errors.New("author not found")
+	ErrPRNotFound      = errors.New("PR not found")
 )
 
 type Error struct {
