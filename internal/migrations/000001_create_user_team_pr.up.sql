@@ -16,7 +16,6 @@ CREATE TABLE IF NOT EXISTS PullRequests(
     title TEXT,
     author_id VARCHAR REFERENCES Users(id),
     status pr_status NOT NULL DEFAULT 'OPEN',
-    needMoreReviewers BOOLEAN,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     merged_at TIMESTAMP DEFAULT NULL
 );
