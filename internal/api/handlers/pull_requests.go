@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/Sugyk/avito_test_task/internal/models"
@@ -23,14 +24,22 @@ func (h *Handler) PullRequestCreate(w http.ResponseWriter, r *http.Request) {
 	pr, err := h.service.PullRequestCreate(r.Context(), req.ToPullRequest())
 	if err != nil {
 		// author/team not found
-		// TODO: differnet errors
+		if errors.Is(err, models.ErrAuthorNotFound) {
+			h.sendError(w, http.StatusNotFound, models.NotFoundErrorCode, err)
+			return
+		}
 		// PR is already exists
-		h.sendError(w, http.StatusBadRequest, models.TeamExistsErrorCode, err)
+		if errors.Is(err, models.ErrPRAlreadyExists) {
+			h.sendError(w, http.StatusConflict, models.PrExistsErrorCode, err)
+			return
+		}
+		h.logger.Error("internal error", "error", err.Error())
+		h.sendError(w, http.StatusInternalServerError, models.InternalErrorCode, models.ErrInternalError)
 		return
 	}
 	// create response
 	resp := models.PullRequestCreateResponse201{
-		Pr: pr,
+		Pr: *pr,
 	}
 	// send response
 	h.sendJSON(w, http.StatusCreated, resp)

@@ -4,6 +4,9 @@ import (
 	"testing"
 )
 
+func bool_pointer(x bool) *bool {
+	return &x
+}
 func TestTeamMemberValidate(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -15,7 +18,7 @@ func TestTeamMemberValidate(t *testing.T) {
 			member: TeamMember{
 				User_id:  "123",
 				Username: "alice",
-				IsActive: true,
+				IsActive: bool_pointer(true),
 			},
 			wantErr: false,
 		},
@@ -61,8 +64,8 @@ func TestTeamValidate(t *testing.T) {
 			team: Team{
 				TeamName: "backend",
 				Members: []TeamMember{
-					{User_id: "1", Username: "alice"},
-					{User_id: "2", Username: "bob"},
+					{User_id: "1", Username: "alice", IsActive: bool_pointer(true)},
+					{User_id: "2", Username: "bob", IsActive: bool_pointer(true)},
 				},
 			},
 			wantErr: false,
@@ -122,7 +125,7 @@ func TestTeamAddRequestValidate(t *testing.T) {
 				Team: Team{
 					TeamName: "frontend",
 					Members: []TeamMember{
-						{User_id: "1", Username: "alice"},
+						{User_id: "1", Username: "alice", IsActive: bool_pointer(true)},
 					},
 				},
 			},

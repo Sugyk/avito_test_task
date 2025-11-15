@@ -5,7 +5,7 @@ import "fmt"
 type TeamMember struct {
 	User_id  string `json:"user_id" db:"id"`
 	Username string `json:"username" db:"name"`
-	IsActive bool   `json:"is_active" db:"isactive"`
+	IsActive *bool  `json:"is_active" db:"isactive"`
 }
 
 func (t *TeamMember) Validate() error {
@@ -14,6 +14,9 @@ func (t *TeamMember) Validate() error {
 	}
 	if t.Username == "" {
 		return fmt.Errorf("username is required")
+	}
+	if t.IsActive == nil {
+		return fmt.Errorf("is_active is required")
 	}
 	return nil
 }
@@ -81,9 +84,9 @@ type UsersSerIsActiveResponse200 struct {
 }
 
 type PullRequest struct {
-	PullRequestId     string   `json:"pull_request_id"`
-	PullRequestName   string   `json:"pull_request_name"`
-	AuthorId          string   `json:"author_id"`
+	PullRequestId     string   `json:"pull_request_id" db:"id"`
+	PullRequestName   string   `json:"pull_request_name" db:"title"`
+	AuthorId          string   `json:"author_id" db:"author_id"`
 	Status            Status   `json:"status"`
 	AssignedReviewers []string `json:"assigned_reviewers"`
 	CreatedAt         *string  `json:"createdAt,omitempty"`

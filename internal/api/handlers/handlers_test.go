@@ -15,6 +15,9 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
+func bool_pointer(x bool) *bool {
+	return &x
+}
 func TestTeamAdd_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -24,7 +27,7 @@ func TestTeamAdd_Success(t *testing.T) {
 	teamInput := &models.Team{
 		TeamName: "backend",
 		Members: []models.TeamMember{
-			{User_id: "1", Username: "alice"},
+			{User_id: "1", Username: "alice", IsActive: bool_pointer(true)},
 		},
 	}
 	body, _ := json.Marshal(models.TeamAddRequest{Team: *teamInput})
@@ -114,7 +117,7 @@ func TestTeamAdd_TeamExists(t *testing.T) {
 	teamInput := &models.Team{
 		TeamName: "backend",
 		Members: []models.TeamMember{
-			{User_id: "1", Username: "alice"},
+			{User_id: "1", Username: "alice", IsActive: bool_pointer(true)},
 		},
 	}
 	body, _ := json.Marshal(models.TeamAddRequest{Team: *teamInput})
@@ -148,12 +151,12 @@ func TestTeamGet_Success(t *testing.T) {
 			{
 				User_id:  "u1",
 				Username: "Alice",
-				IsActive: true,
+				IsActive: bool_pointer(true),
 			},
 			{
 				User_id:  "u2",
 				Username: "Bob",
-				IsActive: true,
+				IsActive: bool_pointer(true),
 			},
 		},
 	}
@@ -312,7 +315,7 @@ func TestPullRequestCreate_Success(t *testing.T) {
 	}
 	body, _ := json.Marshal(reqBody)
 
-	expectedPR := models.PullRequest{
+	expectedPR := &models.PullRequest{
 		PullRequestId:     "pr-1001",
 		PullRequestName:   "Add search",
 		AuthorId:          "u1",
@@ -335,7 +338,7 @@ func TestPullRequestCreate_Success(t *testing.T) {
 	var resp models.PullRequestCreateResponse201
 	err := json.NewDecoder(w.Body).Decode(&resp)
 	require.NoError(t, err)
-	require.Equal(t, expectedPR, resp.Pr)
+	require.Equal(t, *expectedPR, resp.Pr)
 }
 
 func TestPullRequestCreate_InvalidJSON(t *testing.T) {
@@ -400,13 +403,13 @@ func TestPullRequestCreate_PRExists(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/pullRequest/create", bytes.NewReader(body))
 	mockSvc.EXPECT().
 		PullRequestCreate(req.Context(), reqBody.ToPullRequest()).
-		Return(models.PullRequest{}, errors.New("PR id already exists"))
+		Return(nil, models.ErrPRAlreadyExists)
 
 	w := httptest.NewRecorder()
 
 	h.PullRequestCreate(w, req)
 
-	require.Equal(t, http.StatusBadRequest, w.Code)
+	require.Equal(t, http.StatusConflict, w.Code)
 }
 
 func TestPullRequestCreate_AuthorOrTeamNotFound(t *testing.T) {
@@ -427,13 +430,13 @@ func TestPullRequestCreate_AuthorOrTeamNotFound(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/pullRequest/create", bytes.NewReader(body))
 	mockSvc.EXPECT().
 		PullRequestCreate(req.Context(), reqBody.ToPullRequest()).
-		Return(models.PullRequest{}, errors.New("author not found"))
+		Return(nil, models.ErrAuthorNotFound)
 
 	w := httptest.NewRecorder()
 
 	h.PullRequestCreate(w, req)
 
-	require.Equal(t, http.StatusBadRequest, w.Code)
+	require.Equal(t, http.StatusNotFound, w.Code)
 }
 
 func TestPullRequestCreate_ServiceError(t *testing.T) {
@@ -443,7 +446,7 @@ func TestPullRequestCreate_ServiceError(t *testing.T) {
 	mockSvc := NewMockService(ctrl)
 	h := NewHandler(mockSvc, slog.Default())
 
-	reqBody := models.PullRequestCreateRequest{
+	reqBody := &models.PullRequestCreateRequest{
 		PullRequestId:   "pr-x",
 		PullRequestName: "Refactor",
 		AuthorId:        "u1",
@@ -453,13 +456,13 @@ func TestPullRequestCreate_ServiceError(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/pullRequest/create", bytes.NewReader(body))
 	mockSvc.EXPECT().
 		PullRequestCreate(req.Context(), reqBody.ToPullRequest()).
-		Return(models.PullRequest{}, errors.New("unknown error"))
+		Return(nil, errors.New("unknown error"))
 
 	w := httptest.NewRecorder()
 
 	h.PullRequestCreate(w, req)
 
-	require.Equal(t, http.StatusBadRequest, w.Code)
+	require.Equal(t, http.StatusInternalServerError, w.Code)
 }
 
 func TestPullRequestMerge_Success(t *testing.T) {
