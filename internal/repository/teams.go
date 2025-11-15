@@ -12,7 +12,7 @@ import (
 func (r *Repository) CreateOrUpdateTeam(ctx context.Context, team *models.Team) (*models.Team, error) {
 	tx, err := r.db.BeginTxx(ctx, nil)
 	if err != nil {
-		return &models.Team{}, fmt.Errorf("db: error while creating transaction")
+		return nil, fmt.Errorf("db: error while creating transaction")
 	}
 	defer tx.Rollback()
 
@@ -20,16 +20,16 @@ func (r *Repository) CreateOrUpdateTeam(ctx context.Context, team *models.Team) 
 	checkQuery := `SELECT name FROM Teams WHERE name = $1`
 	err = tx.GetContext(ctx, &teamName, checkQuery, team.TeamName)
 	if err == nil {
-		return &models.Team{}, models.ErrTeamExists
+		return nil, models.ErrTeamExists
 	}
 	if err != sql.ErrNoRows {
-		return &models.Team{}, err
+		return nil, err
 	}
 
 	insertTeamQuery := `INSERT INTO Teams (name) VALUES ($1) RETURNING name`
 	err = tx.GetContext(ctx, &teamName, insertTeamQuery, team.TeamName)
 	if err != nil {
-		return &models.Team{}, err
+		return nil, err
 	}
 	var values []interface{}
 	for _, member := range team.Members {
@@ -58,11 +58,11 @@ func (r *Repository) CreateOrUpdateTeam(ctx context.Context, team *models.Team) 
 
 	_, err = tx.ExecContext(ctx, upsertUserQuery, values...)
 	if err != nil {
-		return &models.Team{}, err
+		return nil, err
 	}
 	err = tx.Commit()
 	if err != nil {
-		return &models.Team{}, err
+		return nil, err
 	}
 
 	return team, nil
