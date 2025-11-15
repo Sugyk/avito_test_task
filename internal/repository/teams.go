@@ -12,7 +12,7 @@ import (
 func (r *Repository) CreateOrUpdateTeam(ctx context.Context, team *models.Team) (*models.Team, error) {
 	tx, err := r.db.BeginTxx(ctx, nil)
 	if err != nil {
-		return &models.Team{}, fmt.Errorf("error while creating transaction")
+		return &models.Team{}, fmt.Errorf("db: error while creating transaction")
 	}
 	defer tx.Rollback()
 
@@ -44,10 +44,7 @@ func (r *Repository) CreateOrUpdateTeam(ctx context.Context, team *models.Team) 
 		)
 	}
 
-	resultPlaceholder := scopes[0]
-	if len(scopes) > 1 {
-		resultPlaceholder = strings.Join(scopes, ",")
-	}
+	resultPlaceholder := strings.Join(scopes, ",")
 	upsertUserQuery := fmt.Sprintf(
 		`
         INSERT INTO Users (id, name, team_name, isActive)
@@ -69,4 +66,31 @@ func (r *Repository) CreateOrUpdateTeam(ctx context.Context, team *models.Team) 
 	}
 
 	return team, nil
+}
+
+func (r *Repository) GetTeam(ctx context.Context, teamName string) (*models.Team, error) {
+	var team models.Team
+	teamQuery := `SELECT name FROM Teams WHERE name = $1`
+	err := r.db.GetContext(ctx, &team.TeamName, teamQuery, teamName)
+	if err == sql.ErrNoRows {
+		return nil, models.ErrTeamNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("db: error retrieving team: %w", err)
+	}
+
+	membersQuery := `
+		SELECT id, name, isActive 
+		FROM Users 
+		WHERE team_name = $1
+	`
+	var members []models.TeamMember
+	err = r.db.SelectContext(ctx, &members, membersQuery, teamName)
+	if err != nil {
+		return nil, fmt.Errorf("db: error retrieving team members: %w", err)
+	}
+
+	team.Members = members
+
+	return &team, nil
 }

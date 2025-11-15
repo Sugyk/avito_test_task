@@ -59,7 +59,7 @@ func (h *Handler) TeamGet(w http.ResponseWriter, r *http.Request) {
 	}
 	// create response
 	resp := models.TeamGetResponse200{
-		Team: team,
+		Team: *team,
 	}
 	// send response
 	h.sendJSON(w, http.StatusOK, resp)

@@ -142,7 +142,7 @@ func TestTeamGet_Success(t *testing.T) {
 
 	testTeamName := "backend"
 
-	expectedTeam := models.Team{
+	expectedTeam := &models.Team{
 		TeamName: "backend",
 		Members: []models.TeamMember{
 			{
@@ -175,7 +175,7 @@ func TestTeamGet_Success(t *testing.T) {
 	var out models.TeamAddResponse200
 	err := json.NewDecoder(resp.Body).Decode(&out)
 	require.NoError(t, err)
-	require.Equal(t, out.Team, expectedTeam)
+	require.Equal(t, out.Team, *expectedTeam)
 }
 
 func TestTeamGet_NotFound(t *testing.T) {
@@ -190,7 +190,7 @@ func TestTeamGet_NotFound(t *testing.T) {
 	mockSvc.
 		EXPECT().
 		GetTeamWithMembers(req.Context(), testTeamName).
-		Return(models.Team{}, errors.New("not found"))
+		Return(&models.Team{}, errors.New("not found"))
 
 	h := NewHandler(mockSvc, slog.Default())
 

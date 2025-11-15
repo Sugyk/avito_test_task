@@ -9,6 +9,7 @@ import (
 
 type Repository interface {
 	CreateOrUpdateTeam(ctx context.Context, team *models.Team) (*models.Team, error)
+	GetTeam(ctx context.Context, teamName string) (*models.Team, error)
 }
 
 type Service struct {

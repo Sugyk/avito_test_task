@@ -3,9 +3,9 @@ package models
 import "fmt"
 
 type TeamMember struct {
-	User_id  string `json:"user_id"`
-	Username string `json:"username"`
-	IsActive bool   `json:"is_active"`
+	User_id  string `json:"user_id" db:"id"`
+	Username string `json:"username" db:"name"`
+	IsActive bool   `json:"is_active" db:"isactive"`
 }
 
 func (t *TeamMember) Validate() error {

@@ -14,7 +14,10 @@ func (s *Service) CreateOrUpdateTeam(ctx context.Context, team *models.Team) (*m
 	return team, nil
 }
 
-func (s *Service) GetTeamWithMembers(ctx context.Context, teamName string) (models.Team, error) {
-	// TODO: implement the business logic to get a team
-	return models.Team{}, nil
+func (s *Service) GetTeamWithMembers(ctx context.Context, teamName string) (*models.Team, error) {
+	team, err := s.repo.GetTeam(ctx, teamName)
+	if err != nil {
+		return &models.Team{}, err
+	}
+	return team, nil
 }

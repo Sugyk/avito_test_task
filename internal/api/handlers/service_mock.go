@@ -57,10 +57,10 @@ func (mr *MockServiceMockRecorder) CreateOrUpdateTeam(ctx, team any) *gomock.Cal
 }
 
 // GetTeamWithMembers mocks base method.
-func (m *MockService) GetTeamWithMembers(ctx context.Context, teamName string) (models.Team, error) {
+func (m *MockService) GetTeamWithMembers(ctx context.Context, teamName string) (*models.Team, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetTeamWithMembers", ctx, teamName)
-	ret0, _ := ret[0].(models.Team)
+	ret0, _ := ret[0].(*models.Team)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
