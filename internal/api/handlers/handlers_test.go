@@ -47,7 +47,7 @@ func TestTeamAdd_Success(t *testing.T) {
 	resp := w.Result()
 	require.Equal(t, http.StatusCreated, resp.StatusCode)
 
-	var out models.TeamAddResponse200
+	var out models.TeamAddResponse201
 	err := json.NewDecoder(resp.Body).Decode(&out)
 	require.NoError(t, err)
 	require.Equal(t, teamInput.TeamName, out.Team.TeamName)
@@ -175,7 +175,7 @@ func TestTeamGet_Success(t *testing.T) {
 	resp := w.Result()
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
-	var out models.TeamAddResponse200
+	var out models.TeamAddResponse201
 	err := json.NewDecoder(resp.Body).Decode(&out)
 	require.NoError(t, err)
 	require.Equal(t, out.Team, *expectedTeam)

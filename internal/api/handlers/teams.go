@@ -33,7 +33,7 @@ func (h *Handler) TeamAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// create response
-	resp := models.TeamAddResponse200{
+	resp := models.TeamAddResponse201{
 		Team: *team,
 	}
 	// send response

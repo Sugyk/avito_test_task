@@ -59,7 +59,7 @@ func (t *TeamAddRequest) Validate() error {
 	return nil
 }
 
-type TeamAddResponse200 struct {
+type TeamAddResponse201 struct {
 	Team Team `json:"team"`
 }
 
