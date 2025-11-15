@@ -15,6 +15,7 @@ import (
 	"github.com/Sugyk/avito_test_task/internal/repository"
 	"github.com/Sugyk/avito_test_task/internal/service"
 	"github.com/Sugyk/avito_test_task/pkg/database"
+	"github.com/golang-migrate/migrate/v4"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -96,6 +97,10 @@ func (a *Application) initDatabase(ctx context.Context) error {
 
 func (a *Application) migrate() error {
 	if err := database.RunMigrations(a.db); err != nil {
+		if err == migrate.ErrNoChange {
+			a.logger.Info("no changes to migrate")
+			return nil
+		}
 		return fmt.Errorf("database migration: %w", err)
 	}
 	a.logger.Info("migrated successfully")
