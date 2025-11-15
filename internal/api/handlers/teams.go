@@ -12,7 +12,7 @@ func (h *Handler) TeamAdd(w http.ResponseWriter, r *http.Request) {
 	// decode request
 	var req models.TeamAddRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		h.sendError(w, http.StatusBadRequest, "invalid request body", err)
+		h.sendError(w, http.StatusBadRequest, models.InvalidInputErrorCode, err)
 		return
 	}
 	// validate request

@@ -12,7 +12,7 @@ func (h *Handler) PullRequestCreate(w http.ResponseWriter, r *http.Request) {
 	// decode request
 	var req models.PullRequestCreateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		h.sendError(w, http.StatusBadRequest, "invalid request body", err)
+		h.sendError(w, http.StatusBadRequest, models.InvalidInputErrorCode, err)
 		return
 	}
 	// validate request
@@ -49,7 +49,7 @@ func (h *Handler) PullRequestMerge(w http.ResponseWriter, r *http.Request) {
 	// decode request
 	var req models.PullRequestMergeRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		h.sendError(w, http.StatusBadRequest, "invalid request body", err)
+		h.sendError(w, http.StatusBadRequest, models.InvalidInputErrorCode, err)
 		return
 	}
 	// validate request
