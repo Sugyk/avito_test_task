@@ -19,5 +19,8 @@ func (s *Service) GetTeamWithMembers(ctx context.Context, teamName string) (*mod
 	if err != nil {
 		return nil, err
 	}
+	if team.Members == nil {
+		team.Members = []models.TeamMember{}
+	}
 	return team, nil
 }
