@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"math/rand"
 	"slices"
@@ -53,7 +52,7 @@ func (s *Service) PullRequestCreate(ctx context.Context, pr *models.PullRequest)
 	}
 	// get User and check if not exists
 	author, err := s.repo.GetUser(ctx, pr.AuthorId)
-	if err == sql.ErrNoRows {
+	if err == models.ErrUserNotFound {
 		return nil, models.ErrAuthorNotFound
 	}
 	if err != nil {
