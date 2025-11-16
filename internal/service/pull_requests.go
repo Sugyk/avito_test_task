@@ -48,7 +48,7 @@ func (s *Service) PullRequestCreate(ctx context.Context, pr *models.PullRequest)
 	_, err := s.repo.GetPullRequestBase(ctx, pr.PullRequestId)
 	if err == nil {
 		return nil, models.ErrPRAlreadyExists
-	} else if err != sql.ErrNoRows {
+	} else if err != models.ErrPRNotFound {
 		return nil, fmt.Errorf("db: error getting pull request: %w", err)
 	}
 	// get User and check if not exists
