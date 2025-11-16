@@ -9,15 +9,14 @@ NC := \033[0m
 
 start_integration:
 	@echo "starting integration tests services"
-	@mkdir -p test/integration/coverage && \
-	chmod 777 test/integration/coverage && \
-	docker compose down && \
+	@docker compose down && \
+	docker compose build && \
 	docker compose pull && \
 	docker compose up -d
 
 stop_integration:
 	@echo "stopping integration tests services"
-	@cd tests/integration/docker && docker compose down
+	@docker compose down
 
 integration:
 	@echo "run integration tests"
@@ -33,3 +32,7 @@ integration:
 		$(MAKE) stop_integration; \
 		echo "$(GREEN)integration tests passed$(NC)"; \
 	fi
+
+unit:
+	@echo "run unit tests"
+	@go test ./internal/...
