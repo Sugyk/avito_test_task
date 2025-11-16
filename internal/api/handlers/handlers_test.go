@@ -242,7 +242,7 @@ func TestUsersSetIsActive_Success(t *testing.T) {
 		IsActive: false,
 	}
 
-	mockService.EXPECT().UsersSetIsActive(req.Context(), reqBody.UserId, reqBody.IsActive).Return(expectedUser, nil)
+	mockService.EXPECT().UsersSetIsActive(req.Context(), reqBody.UserId, *reqBody.IsActive).Return(expectedUser, nil)
 
 	h.UsersSetIsActive(w, req)
 
@@ -293,7 +293,7 @@ func TestUsersSetIsActive_UserNotFound(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	mockService.EXPECT().
-		UsersSetIsActive(req.Context(), reqBody.UserId, reqBody.IsActive).
+		UsersSetIsActive(req.Context(), reqBody.UserId, *reqBody.IsActive).
 		Return(nil, models.ErrUserNotFound)
 
 	h.UsersSetIsActive(w, req)
