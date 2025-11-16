@@ -4,10 +4,19 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"strings"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/Sugyk/avito_test_task/internal/models"
 )
+
+func (r *Repository) GetTeamBase(ctx context.Context, team *models.Team) (*models.Team, error) {
+	checkQuery := `SELECT name FROM Teams WHERE name = $1`
+	err := r.db.GetContext(ctx, &team.TeamName, checkQuery, team.TeamName)
+	if err == sql.ErrNoRows {
+		return team, models.ErrUserNotFound
+	}
+	return team, err
+}
 
 func (r *Repository) CreateOrUpdateTeam(ctx context.Context, team *models.Team) (_ *models.Team, err error) {
 	tx, err := r.db.BeginTxx(ctx, nil)
@@ -16,59 +25,51 @@ func (r *Repository) CreateOrUpdateTeam(ctx context.Context, team *models.Team) 
 	}
 	defer func() {
 		if err != nil {
-			if err := tx.Rollback(); err != nil {
+			if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
 				r.logger.Error("db: error while rollback changes", "error", err.Error())
 			}
 		} else {
-			if err := tx.Commit(); err != nil {
+			if err := tx.Commit(); err != nil && err != sql.ErrTxDone {
 				r.logger.Error("db: error while rollback changes", "error", err.Error())
 			}
 		}
 	}()
 
-	var teamName string
-	checkQuery := `SELECT name FROM Teams WHERE name = $1`
-	err = tx.GetContext(ctx, &teamName, checkQuery, team.TeamName)
-	if err == nil {
-		return nil, models.ErrTeamExists
-	}
-	if err != sql.ErrNoRows {
-		return nil, err
-	}
-
 	insertTeamQuery := `INSERT INTO Teams (name) VALUES ($1) RETURNING name`
-	err = tx.GetContext(ctx, &teamName, insertTeamQuery, team.TeamName)
+	res, err := tx.ExecContext(ctx, insertTeamQuery, team.TeamName)
 	if err != nil {
 		return nil, err
 	}
-	var values []interface{}
-	for _, member := range team.Members {
-		values = append(values, member.UserId, member.Username, teamName, member.IsActive)
-	}
-	var scopes = []string{}
-	placeholder := "($%d, $%d, $%d, $%d)"
-	for i := range team.Members {
-		scopes = append(
-			scopes,
-			fmt.Sprintf(placeholder, i*4+1, i*4+2, i*4+3, i*4+4),
-		)
+	rowsN, _ := res.RowsAffected()
+	if rowsN != 1 {
+		return nil, fmt.Errorf("db: inserting team error: affected rows expected: 1, got: %d", rowsN)
 	}
 
-	resultPlaceholder := strings.Join(scopes, ",")
-	upsertUserQuery := fmt.Sprintf(
+	insertQuery := squirrel.Insert("Users").Columns("id", "name", "team_name", "isActive")
+	if len(team.Members) > 0 {
+		for _, member := range team.Members {
+			insertQuery = insertQuery.Values(member.UserId, member.Username, team.TeamName, member.IsActive)
+		}
+	}
+	insertQuery = insertQuery.Suffix(
 		`
-        INSERT INTO Users (id, name, team_name, isActive)
-        VALUES %s
-        ON CONFLICT (id) DO UPDATE SET
+		ON CONFLICT (id) DO UPDATE SET
 		name = EXCLUDED.name,
 		team_name = EXCLUDED.team_name,
 		isActive = EXCLUDED.isActive
-		`, resultPlaceholder,
+		`,
 	)
-
-	_, err = tx.ExecContext(ctx, upsertUserQuery, values...)
+	insertTeamQuery, args, err := insertQuery.PlaceholderFormat(squirrel.Dollar).ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("db: error building query: %w", err)
+	}
+	res, err = tx.ExecContext(ctx, insertTeamQuery, args...)
 	if err != nil {
 		return nil, err
+	}
+	rowsN, _ = res.RowsAffected()
+	if int(rowsN) != len(team.Members) {
+		return nil, fmt.Errorf("db: inserting team error: affected rows expected: %d, got: %d", len(team.Members), rowsN)
 	}
 	err = tx.Commit()
 	if err != nil {

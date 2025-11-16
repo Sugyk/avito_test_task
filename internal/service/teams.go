@@ -7,7 +7,15 @@ import (
 )
 
 func (s *Service) CreateOrUpdateTeam(ctx context.Context, team *models.Team) (*models.Team, error) {
-	team, err := s.repo.CreateOrUpdateTeam(ctx, team)
+	team, err := s.repo.GetTeamBase(ctx, team)
+	if err == nil {
+		return nil, models.ErrTeamExists
+	}
+	if err != models.ErrUserNotFound {
+		return nil, err
+	}
+
+	team, err = s.repo.CreateOrUpdateTeam(ctx, team)
 	if err != nil {
 		return nil, err
 	}

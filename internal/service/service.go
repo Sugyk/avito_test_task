@@ -18,6 +18,7 @@ type Repository interface {
 	GetPullRequestBase(ctx context.Context, prID string) (*models.PullRequest, error)
 	GetUser(ctx context.Context, id string) (*models.User, error)
 	GetTeamMembers(ctx context.Context, team_name string) ([]models.User, error)
+	GetTeamBase(ctx context.Context, team *models.Team) (*models.Team, error)
 }
 
 type Service struct {
