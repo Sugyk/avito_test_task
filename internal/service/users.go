@@ -15,6 +15,9 @@ func (s *Service) UsersSetIsActive(ctx context.Context, userID string, isActive 
 }
 
 func (s *Service) UsersGetReview(ctx context.Context, userID string) ([]models.PullRequestShort, error) {
-	// TODO: implement the business logic to get user's pull requests for review
-	return []models.PullRequestShort{}, nil
+	userPRs, err := s.repo.GetUsersReview(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	return userPRs, nil
 }

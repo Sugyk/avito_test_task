@@ -32,3 +32,27 @@ func (r *Repository) UsersSetIsActive(ctx context.Context, userID string, isActi
 
 	return &user, nil
 }
+
+func (r *Repository) GetUsersReview(ctx context.Context, userID string) ([]models.PullRequestShort, error) {
+	var shortPRs = []models.PullRequestShort{}
+	checkQuery := `SELECT id FROM Users WHERE id = $1`
+	var checkUserID string
+	err := r.db.GetContext(ctx, &checkUserID, checkQuery, userID)
+	if err == sql.ErrNoRows {
+		return nil, models.ErrUserNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("db: error retrieving user: %w", err)
+	}
+
+	getPrsQuery := `
+	SELECT pr_id AS id, title, author_id, status FROM PullRequestsUsers
+	LEFT JOIN PullRequests AS pr ON pr_id = pr.id
+	WHERE user_id = $1
+	`
+	err = r.db.SelectContext(ctx, &shortPRs, getPrsQuery, userID)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, fmt.Errorf("db: error selecting PRs of user: %w", err)
+	}
+	return shortPRs, nil
+}

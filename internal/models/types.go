@@ -1,5 +1,7 @@
 package models
 
+import "fmt"
+
 type Status string
 
 const (
@@ -7,11 +9,11 @@ const (
 	StatusMerged Status = "MERGED"
 )
 
-func (s Status) Validate() bool {
+func (s Status) Validate() error {
 	switch s {
 	case StatusOpen, StatusMerged:
-		return true
+		return nil
 	default:
-		return false
+		return fmt.Errorf("bad status: %s", s)
 	}
 }

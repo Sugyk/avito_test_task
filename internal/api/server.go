@@ -22,7 +22,7 @@ func NewRouter(port string, handler *handlers.Handler) *Router {
 	mux.HandleFunc("POST /pullRequest/create", handler.PullRequestCreate)
 	mux.HandleFunc("POST /pullRequest/merge", handler.PullRequestMerge)
 	mux.HandleFunc("POST /pullRequest/reassign", handler.PullRequestReassign)
-	mux.HandleFunc("POST /users/getReview", handler.PullRequestReassign)
+	mux.HandleFunc("GET /users/getReview", handler.UsersGetReview)
 
 	server := &http.Server{
 		Addr:    ":" + port,

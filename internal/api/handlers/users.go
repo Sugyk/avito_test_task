@@ -52,8 +52,12 @@ func (h *Handler) UsersGetReview(w http.ResponseWriter, r *http.Request) {
 	prs, err := h.service.UsersGetReview(r.Context(), userID)
 	if err != nil {
 		// user not found
-		h.sendError(w, http.StatusNotFound, models.NotFoundErrorCode, err)
-		return
+		if errors.Is(err, models.ErrUserNotFound) {
+			h.sendError(w, http.StatusNotFound, models.NotFoundErrorCode, models.ErrUserNotFound)
+			return
+		}
+		h.logger.Error("error getting user reviews", "error", err.Error())
+		h.sendError(w, http.StatusInternalServerError, models.InternalErrorCode, models.ErrInternalError)
 	}
 	// create response
 	resp := models.UsersGetReviewResponse200{

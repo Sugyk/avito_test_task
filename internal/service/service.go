@@ -14,6 +14,7 @@ type Repository interface {
 	CreatePullRequestAndAssignReviewers(ctx context.Context, pullRequest *models.PullRequest) (*models.PullRequest, error)
 	MergePullRequest(ctx context.Context, prID string) (*models.PullRequest, error)
 	ReAssignPullRequest(ctx context.Context, prID string, oldUserID string) (*models.PullRequest, string, error)
+	GetUsersReview(ctx context.Context, userID string) ([]models.PullRequestShort, error)
 }
 
 type Service struct {

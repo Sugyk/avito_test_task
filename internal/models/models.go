@@ -168,10 +168,10 @@ type PullRequestReassignResponse200 struct {
 }
 
 type PullRequestShort struct {
-	PullRequestId   string `json:"pull_request_id"`
-	PullRequestName string `json:"pull_request_name"`
-	AuthorId        string `json:"author_id"`
-	Status          Status `json:"status"`
+	PullRequestId   string `json:"pull_request_id" db:"id"`
+	PullRequestName string `json:"pull_request_name" db:"title"`
+	AuthorId        string `json:"author_id" db:"author_id"`
+	Status          Status `json:"status" db:"status"`
 }
 
 type UsersGetReviewResponse200 struct {
