@@ -56,5 +56,5 @@ func (h *Handler) TeamGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// send response
-	h.sendJSON(w, http.StatusOK, team)
+	h.sendJSON(w, http.StatusOK, *team)
 }

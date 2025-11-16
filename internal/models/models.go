@@ -52,10 +52,6 @@ type TeamAddResponse201 struct {
 	Team Team `json:"team"`
 }
 
-type TeamGetResponse200 struct {
-	Team Team `json:"team"`
-}
-
 type UsersSetIsActiveRequest struct {
 	UserId   string `json:"user_id"`
 	IsActive *bool  `json:"is_active"`

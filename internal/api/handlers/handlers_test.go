@@ -187,10 +187,10 @@ func TestTeamGet_Success(t *testing.T) {
 	resp := w.Result()
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
-	var out models.TeamAddResponse201
+	var out models.Team
 	err := json.NewDecoder(resp.Body).Decode(&out)
 	require.NoError(t, err)
-	require.Equal(t, out.Team, *expectedTeam)
+	require.Equal(t, out, *expectedTeam)
 }
 
 func TestTeamGet_NotFound(t *testing.T) {
