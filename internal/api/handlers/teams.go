@@ -55,10 +55,6 @@ func (h *Handler) TeamGet(w http.ResponseWriter, r *http.Request) {
 		h.sendError(w, http.StatusNotFound, models.NotFoundErrorCode, err)
 		return
 	}
-	// create response
-	resp := models.TeamGetResponse200{
-		Team: *team,
-	}
 	// send response
-	h.sendJSON(w, http.StatusOK, resp)
+	h.sendJSON(w, http.StatusOK, team)
 }
