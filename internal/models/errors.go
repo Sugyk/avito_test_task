@@ -24,6 +24,7 @@ var (
 	ErrReassigningMergedPR = errors.New("cannot reassign on merged PR")
 	ErrUserNotAssignedToPR = errors.New("reviewer is not assigned to this PR")
 	ErrNoActiveCandidates  = errors.New("no active replacement candidate in team")
+	ErrNoReviewers         = errors.New("no reviewers assigned to PR")
 )
 
 type Error struct {

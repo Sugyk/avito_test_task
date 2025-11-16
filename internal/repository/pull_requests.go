@@ -4,29 +4,41 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"slices"
 	"time"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/Sugyk/avito_test_task/internal/models"
 )
 
-func (r *Repository) GetUser(ctx context.Context, id string) (*models.User, error) {
-	var user models.User
-	getUserQuery := `SELECT id, name, team_name, isActive FROM Users WHERE id = $1`
-
-	err := r.db.GetContext(ctx, &user, getUserQuery, id)
-	return &user, err
-}
-
 func (r *Repository) GetPullRequestBase(ctx context.Context, prID string) (*models.PullRequest, error) {
 	var pr models.PullRequest
 	checkPRQuery := `SELECT id, title, author_id, status FROM PullRequests WHERE id = $1`
 	err := r.db.GetContext(ctx, &pr, checkPRQuery, prID)
+	if err == sql.ErrNoRows {
+		return &pr, models.ErrPRNotFound
+	}
 	return &pr, err
 }
 
+func (r *Repository) GetPRReviewers(ctx context.Context, prID string) ([]string, error) {
+	reviewersIds := make([]string, 0)
+	getReviewersQuery := `
+	SELECT user_id 
+	FROM PullRequestsUsers
+	WHERE pr_id = $1
+	`
+	err := r.db.GetContext(ctx, &reviewersIds, getReviewersQuery, prID)
+	if err == sql.ErrNoRows {
+		return []string{}, models.ErrNoReviewers
+	}
+	if err != nil {
+		return []string{}, fmt.Errorf("db: error retrieving reviewers: %w", err)
+	}
+	return reviewersIds, nil
+}
+
 func (r *Repository) CreatePullRequestAndAssignReviewers(ctx context.Context, pullRequest *models.PullRequest) (_ *models.PullRequest, err error) {
+	// preparing transaction
 	tx, err := r.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("db: error starting transaction: %w", err)
@@ -42,6 +54,7 @@ func (r *Repository) CreatePullRequestAndAssignReviewers(ctx context.Context, pu
 			}
 		}
 	}()
+	// end preparing transaction
 
 	createPRQuery := `
 	INSERT INTO PullRequests(id, title, author_id, status)
@@ -79,17 +92,7 @@ func (r *Repository) CreatePullRequestAndAssignReviewers(ctx context.Context, pu
 	return pullRequest, nil
 }
 
-func (r *Repository) MergePullRequest(ctx context.Context, prID string) (*models.PullRequest, error) {
-	var pr models.PullRequest
-	getQuery := `SELECT id, title, author_id, status FROM PullRequests WHERE id = $1`
-	err := r.db.GetContext(ctx, &pr, getQuery, prID)
-	if err == sql.ErrNoRows {
-		return nil, models.ErrPRNotFound
-	}
-	if err != nil {
-		return nil, fmt.Errorf("db: error retrieving team: %w", err)
-	}
-
+func (r *Repository) MergePullRequest(ctx context.Context, pr *models.PullRequest) (*models.PullRequest, error) {
 	membersQuery := `
 		SELECT user_id 
 		FROM PullRequestsUsers 
@@ -98,7 +101,7 @@ func (r *Repository) MergePullRequest(ctx context.Context, prID string) (*models
 
 	reviewers := make([]string, 0)
 
-	err = r.db.SelectContext(ctx, &reviewers, membersQuery, prID)
+	err := r.db.SelectContext(ctx, &reviewers, membersQuery, pr.PullRequestId)
 	if err != nil {
 		return nil, fmt.Errorf("db: error retrieving reviewers: %w", err)
 	}
@@ -112,20 +115,18 @@ func (r *Repository) MergePullRequest(ctx context.Context, prID string) (*models
 		WHERE id = $2
 		RETURNING status, merged_at
 	`
-	err = r.db.GetContext(ctx, &pr, updateMemberQuery, merged_time, prID)
+	err = r.db.GetContext(ctx, &pr, updateMemberQuery, merged_time, pr.PullRequestId)
 	if err != nil {
 		return nil, fmt.Errorf("db: error updating team members: %w", err)
 	}
 
-	return &pr, nil
+	return pr, nil
 }
 
-func (r *Repository) ReAssignPullRequest(ctx context.Context, prID string, oldUserID string) (_ *models.PullRequest, _ string, err error) {
-	var pullRequest models.PullRequest
-	var newReviewerID string
+func (r *Repository) ReAssignPullRequest(ctx context.Context, prID string, oldUser *models.User, newReviewerId string) (_ string, err error) {
 	tx, err := r.db.BeginTxx(ctx, nil)
 	if err != nil {
-		return nil, "", fmt.Errorf("db: start transaction error: %w", err)
+		return "", fmt.Errorf("db: start transaction error: %w", err)
 	}
 	defer func() {
 		if err != nil {
@@ -139,82 +140,18 @@ func (r *Repository) ReAssignPullRequest(ctx context.Context, prID string, oldUs
 		}
 	}()
 
-	checkQuery := `SELECT id, title, author_id, status FROM PullRequests WHERE id = $1`
-	err = tx.GetContext(ctx, &pullRequest, checkQuery, prID)
-	if err == sql.ErrNoRows {
-		return nil, "", models.ErrPRNotFound
-	}
-	if err != nil {
-		return nil, "", fmt.Errorf("db: error retrieving team: %w", err)
-	}
-	if pullRequest.Status != "OPEN" {
-		return nil, "", models.ErrReassigningMergedPR
-	}
-	var user models.User
-	checkQuery = `SELECT id, name, team_name FROM Users WHERE id = $1`
-	err = tx.GetContext(ctx, &user, checkQuery, oldUserID)
-	if err == sql.ErrNoRows {
-		return nil, "", models.ErrUserNotFound
-	}
-	if err != nil {
-		return nil, "", fmt.Errorf("db: error retrieving user: %w", err)
-	}
-
-	activeMatesIds := make([]string, 0)
-	getActiveTeammatesQuery := `
-	SELECT id FROM Users
-	WHERE team_name = $1 AND isActive = true AND id != $2 
-	`
-	err = tx.SelectContext(ctx, &activeMatesIds, getActiveTeammatesQuery, user.TeamName, oldUserID)
-	if err == sql.ErrNoRows {
-		return nil, "", models.ErrNoActiveCandidates
-	}
-	if err != nil {
-		return nil, "", fmt.Errorf("db: error retrieving teammates: %w", err)
-	}
-	reviewersIds := make([]string, 0)
-	getReviewersQuery := `
-	SELECT user_id FROM PullRequestsUsers
-	WHERE pr_id = $1
-	`
-	err = tx.SelectContext(ctx, &reviewersIds, getReviewersQuery, prID)
-	if err != nil && err != sql.ErrNoRows {
-		return nil, "", fmt.Errorf("db: error retrieving reviewers: %w", err)
-	}
-	if !slices.Contains(reviewersIds, oldUserID) {
-		return nil, "", models.ErrUserNotAssignedToPR
-	}
-	reviewersIds = slices.DeleteFunc(reviewersIds, func(s string) bool {
-		return s == oldUserID
-	})
-	reviewersSet := make(map[string]struct{})
-
-	for _, reviewer := range reviewersIds {
-		reviewersSet[reviewer] = struct{}{}
-	}
-	for _, mate := range activeMatesIds {
-		_, ok := reviewersSet[mate]
-		if !ok {
-			newReviewerID = mate
-			break
-		}
-	}
-	if newReviewerID == "" {
-		return nil, "", models.ErrNoActiveCandidates
-	}
-
 	insertNewReviewerQuery := `
 	INSERT INTO PullRequestsUsers(pr_id, user_id)
 	VALUES ($1, $2)
 	RETURNING user_id
 	`
 	var checkNewReviewerID string
-	err = tx.GetContext(ctx, &checkNewReviewerID, insertNewReviewerQuery, prID, newReviewerID)
+	err = tx.GetContext(ctx, &checkNewReviewerID, insertNewReviewerQuery, prID, newReviewerId)
 	if err != nil {
-		return nil, "", fmt.Errorf("db: internal error: error inserting new reviewer: %w", err)
+		return "", fmt.Errorf("db: internal error: error inserting new reviewer: %w", err)
 	}
-	if checkNewReviewerID != newReviewerID {
-		return nil, "", fmt.Errorf("db: internal error: error inserting new reviewer: %w", err)
+	if checkNewReviewerID != newReviewerId {
+		return "", fmt.Errorf("db: internal error: error inserting new reviewer: %w", err)
 	}
 
 	deleteOldReviewerQuery := `
@@ -228,24 +165,22 @@ func (r *Repository) ReAssignPullRequest(ctx context.Context, prID string, oldUs
 		CheckDeletedReviewerId string `db:"user_id"`
 	}{}
 
-	err = tx.GetContext(ctx, &checkDeleted, deleteOldReviewerQuery, prID, oldUserID)
+	err = tx.GetContext(ctx, &checkDeleted, deleteOldReviewerQuery, prID, oldUser.UserId)
 	if err != nil {
-		return nil, "", fmt.Errorf("db: internal error: error deleting old reviewer: %w", err)
+		return "", fmt.Errorf("db: internal error: error deleting old reviewer: %w", err)
 	}
-	if checkDeleted.CheckDeletedPRId != prID || checkDeleted.CheckDeletedReviewerId != oldUserID {
-		return nil, "",
+	if checkDeleted.CheckDeletedPRId != prID || checkDeleted.CheckDeletedReviewerId != oldUser.UserId {
+		return "",
 			fmt.Errorf(
 				"db: internal error: error deleting old reviewer: deleted pr_id, user_id: %s, %s. Expected: (%s, %s)",
 				checkDeleted.CheckDeletedPRId,
 				checkDeleted.CheckDeletedReviewerId,
-				prID, oldUserID,
+				prID, oldUser.UserId,
 			)
-
 	}
 	err = tx.Commit()
 	if err != nil {
-		return nil, "", fmt.Errorf("db: commit error:%w", err)
+		return "", fmt.Errorf("db: commit error:%w", err)
 	}
-	pullRequest.AssignedReviewers = append(reviewersIds, newReviewerID)
-	return &pullRequest, newReviewerID, nil
+	return newReviewerId, nil
 }

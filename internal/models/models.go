@@ -28,10 +28,10 @@ type Team struct {
 
 func (t *Team) Validate() error {
 	if t.TeamName == "" {
-		return fmt.Errorf("name is required")
+		return fmt.Errorf("team_name is required")
 	}
 	if len(t.Members) == 0 {
-		return fmt.Errorf("Team must contain at least one member")
+		return fmt.Errorf("team must contain at least one member")
 	}
 	for i, member := range t.Members {
 		if err := member.Validate(); err != nil {
@@ -46,17 +46,6 @@ type User struct {
 	Username string `json:"username" db:"name"`
 	TeamName string `json:"team_name" db:"team_name"`
 	IsActive bool   `json:"is_active" db:"isactive"`
-}
-
-type TeamAddRequest struct {
-	Team Team `json:"team"`
-}
-
-func (t *TeamAddRequest) Validate() error {
-	if err := t.Team.Validate(); err != nil {
-		return fmt.Errorf("invalid team data: %w", err)
-	}
-	return nil
 }
 
 type TeamAddResponse201 struct {

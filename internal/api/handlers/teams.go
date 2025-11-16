@@ -10,7 +10,7 @@ import (
 
 func (h *Handler) TeamAdd(w http.ResponseWriter, r *http.Request) {
 	// decode request
-	var req models.TeamAddRequest
+	var req models.Team
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		h.sendError(w, http.StatusBadRequest, models.InvalidInputErrorCode, err)
 		return
@@ -21,7 +21,7 @@ func (h *Handler) TeamAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// business logic
-	team, err := h.service.CreateOrUpdateTeam(r.Context(), &req.Team)
+	team, err := h.service.CreateOrUpdateTeam(r.Context(), &req)
 	if err != nil {
 		// team_name already exists
 		if errors.Is(err, models.ErrTeamExists) {

@@ -116,28 +116,24 @@ func TestTeamValidate(t *testing.T) {
 func TestTeamAddRequestValidate(t *testing.T) {
 	tests := []struct {
 		name    string
-		req     TeamAddRequest
+		req     Team
 		wantErr bool
 	}{
 		{
 			name: "valid request",
-			req: TeamAddRequest{
-				Team: Team{
-					TeamName: "frontend",
-					Members: []TeamMember{
-						{UserId: "1", Username: "alice", IsActive: bool_pointer(true)},
-					},
+			req: Team{
+				TeamName: "frontend",
+				Members: []TeamMember{
+					{UserId: "1", Username: "alice", IsActive: bool_pointer(true)},
 				},
 			},
 			wantErr: false,
 		},
 		{
 			name: "invalid team",
-			req: TeamAddRequest{
-				Team: Team{
-					TeamName: "",
-					Members:  nil,
-				},
+			req: Team{
+				TeamName: "",
+				Members:  nil,
 			},
 			wantErr: true,
 		},

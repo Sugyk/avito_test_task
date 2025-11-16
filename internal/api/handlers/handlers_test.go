@@ -31,7 +31,7 @@ func TestTeamAdd_Success(t *testing.T) {
 			{UserId: "1", Username: "alice", IsActive: bool_pointer(true)},
 		},
 	}
-	body, _ := json.Marshal(models.TeamAddRequest{Team: *teamInput})
+	body, _ := json.Marshal(teamInput)
 	req := httptest.NewRequest(http.MethodPost, "/team/add", bytes.NewReader(body))
 
 	mockService.
@@ -132,7 +132,7 @@ func TestTeamAdd_TeamExists(t *testing.T) {
 			{UserId: "1", Username: "alice", IsActive: bool_pointer(true)},
 		},
 	}
-	body, _ := json.Marshal(models.TeamAddRequest{Team: *teamInput})
+	body, _ := json.Marshal(teamInput)
 	req := httptest.NewRequest(http.MethodPost, "/team/add", bytes.NewReader(body))
 
 	mockService.

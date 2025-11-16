@@ -5,9 +5,21 @@ import (
 	"database/sql"
 	"fmt"
 	"math/rand"
+	"slices"
 
 	"github.com/Sugyk/avito_test_task/internal/models"
 )
+
+func getActiveUsersIds(teamMembers []models.User) []string {
+	activeMembersIDs := make([]string, 0)
+	for _, member := range teamMembers {
+		if !member.IsActive {
+			continue
+		}
+		activeMembersIDs = append(activeMembersIDs, member.UserId)
+	}
+	return activeMembersIDs
+}
 
 func getTwoRandomIds(ids []string) []string {
 	l := len(ids)
@@ -52,15 +64,11 @@ func (s *Service) PullRequestCreate(ctx context.Context, pr *models.PullRequest)
 	if err != nil {
 		return nil, err
 	}
-
-	activeMembersIDs := make([]string, 0)
-	for _, member := range teamMembers {
-		if member.UserId == author.UserId || !member.IsActive {
-			continue
-		}
-		activeMembersIDs = append(activeMembersIDs, member.UserId)
-	}
-	pr.AssignedReviewers = getTwoRandomIds(activeMembersIDs)
+	activeTeamMembersIds := getActiveUsersIds(teamMembers)
+	activeTeamMembersIds = slices.DeleteFunc(activeTeamMembersIds, func(s string) bool {
+		return s == pr.AuthorId
+	})
+	pr.AssignedReviewers = getTwoRandomIds(activeTeamMembersIds)
 	createdPR, err := s.repo.CreatePullRequestAndAssignReviewers(ctx, pr)
 	if err != nil {
 		return nil, err
@@ -69,7 +77,16 @@ func (s *Service) PullRequestCreate(ctx context.Context, pr *models.PullRequest)
 }
 
 func (s *Service) PullRequestMerge(ctx context.Context, pr *models.PullRequest) (*models.PullRequest, error) {
-	mergedPR, err := s.repo.MergePullRequest(ctx, pr.PullRequestId)
+	pr, err := s.repo.GetPullRequestBase(ctx, pr.PullRequestId)
+	if err == models.ErrPRNotFound {
+		return nil, err
+	}
+
+	pr.AssignedReviewers, err = s.repo.GetPRReviewers(ctx, pr.PullRequestId)
+	if err != nil && err != models.ErrNoReviewers {
+		return nil, err
+	}
+	mergedPR, err := s.repo.MergePullRequest(ctx, pr)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +94,68 @@ func (s *Service) PullRequestMerge(ctx context.Context, pr *models.PullRequest) 
 }
 
 func (s *Service) PullRequestReassign(ctx context.Context, prID string, oldUserID string) (*models.PullRequest, string, error) {
-	pr, newReviewer, err := s.repo.ReAssignPullRequest(ctx, prID, oldUserID)
+	var pr = &models.PullRequest{PullRequestId: prID}
+	// check PR exists
+	pr, err := s.repo.GetPullRequestBase(ctx, pr.PullRequestId)
+	if err != nil {
+		return nil, "", err
+	}
+	if pr.Status != "OPEN" {
+		return nil, "", models.ErrReassigningMergedPR
+	}
+	// check if old reviewer exists
+	user, err := s.repo.GetUser(ctx, oldUserID)
+	if err != nil {
+		return nil, "", err
+	}
+
+	// finding new active reviewer
+	teamMembers, err := s.repo.GetTeamMembers(ctx, user.TeamName)
+	if err != nil {
+		return nil, "", models.ErrNoActiveCandidates
+	}
+	activeMembersIDs := getActiveUsersIds(teamMembers)
+
+	activeMembersIDs = slices.DeleteFunc(activeMembersIDs, func(s string) bool {
+		return s == pr.AuthorId || s == oldUserID
+	})
+
+	if len(activeMembersIDs) == 0 {
+		return nil, "", models.ErrNoActiveCandidates
+	}
+	reviewersIds, err := s.repo.GetPRReviewers(ctx, prID)
+	if err == models.ErrNoReviewers {
+		return nil, "", models.ErrNoActiveCandidates
+	}
+	if err != nil {
+		return nil, "", err
+	}
+	if !slices.Contains(reviewersIds, oldUserID) {
+		return nil, "", models.ErrUserNotAssignedToPR
+	}
+	reviewersIds = slices.DeleteFunc(reviewersIds, func(s string) bool {
+		return s == oldUserID
+	})
+
+	reviewersSet := make(map[string]struct{})
+	var newReviewerID string
+	for _, reviewer := range reviewersIds {
+		reviewersSet[reviewer] = struct{}{}
+	}
+	for _, mate := range activeMembersIDs {
+		_, ok := reviewersSet[mate]
+		if !ok {
+			newReviewerID = mate
+			break
+		}
+	}
+	if newReviewerID == "" {
+		return nil, "", models.ErrNoActiveCandidates
+	}
+
+	//
+
+	newReviewer, err := s.repo.ReAssignPullRequest(ctx, prID, user, newReviewerID)
 	if err != nil {
 		return nil, "", err
 	}

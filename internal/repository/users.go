@@ -8,6 +8,17 @@ import (
 	"github.com/Sugyk/avito_test_task/internal/models"
 )
 
+func (r *Repository) GetUser(ctx context.Context, id string) (*models.User, error) {
+	var user models.User
+	getUserQuery := `SELECT id, name, team_name, isActive FROM Users WHERE id = $1`
+
+	err := r.db.GetContext(ctx, &user, getUserQuery, id)
+	if err == sql.ErrNoRows {
+		return &user, models.ErrUserNotFound
+	}
+	return &user, err
+}
+
 func (r *Repository) GetTeamMembers(ctx context.Context, team_name string) ([]models.User, error) {
 	var teamMembers []models.User
 	getTeamIDsQuery := `
