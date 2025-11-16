@@ -22,7 +22,7 @@ func (s *Service) PullRequestMerge(ctx context.Context, pr *models.PullRequest) 
 	return mergedPR, nil
 }
 
-func (s *Service) PullRequestReassign(ctx context.Context, prID string, oldUserID string) (models.PullRequest, string, error) {
+func (s *Service) PullRequestReassign(ctx context.Context, prID string, oldUserID string) (*models.PullRequest, string, error) {
 	// TODO: implement the business logic to reassign a pull request reviewer
-	return models.PullRequest{}, "", nil
+	return &models.PullRequest{}, "", nil
 }

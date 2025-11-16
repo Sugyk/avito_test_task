@@ -104,13 +104,13 @@ type PullRequestCreateRequest struct {
 
 func (p *PullRequestCreateRequest) Validate() error {
 	if p.PullRequestId == "" {
-		return fmt.Errorf("%w: pull_request_id is required", nil) // TODO: insert error
+		return fmt.Errorf("pull_request_id is required")
 	}
 	if p.PullRequestName == "" {
-		return fmt.Errorf("%w: pull_request_name is required", nil) // TODO: insert error
+		return fmt.Errorf("pull_request_name is required")
 	}
 	if p.AuthorId == "" {
-		return fmt.Errorf("%w: author_id is required", nil) // TODO: insert error
+		return fmt.Errorf("author_id is required")
 	}
 	return nil
 }
@@ -132,7 +132,7 @@ type PullRequestMergeRequest struct {
 
 func (p *PullRequestMergeRequest) Validate() error {
 	if p.PullRequestId == "" {
-		return fmt.Errorf("%w: pull_request_id is required", nil) // TODO: insert error
+		return fmt.Errorf("pull_request_id is required")
 	}
 	return nil
 }
@@ -154,10 +154,10 @@ type PullRequestReassignRequest struct {
 
 func (p *PullRequestReassignRequest) Validate() error {
 	if p.PullRequestId == "" {
-		return fmt.Errorf("%w: pull_request_id is required", nil) // TODO: insert error
+		return fmt.Errorf("pull_request_id is required")
 	}
 	if p.OldReviewerId == "" {
-		return fmt.Errorf("%w: old_reviewer_id is required", nil) // TODO: insert error
+		return fmt.Errorf("old_reviewer_id is required")
 	}
 	return nil
 }

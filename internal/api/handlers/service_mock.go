@@ -102,10 +102,10 @@ func (mr *MockServiceMockRecorder) PullRequestMerge(ctx, pr any) *gomock.Call {
 }
 
 // PullRequestReassign mocks base method.
-func (m *MockService) PullRequestReassign(ctx context.Context, prID, oldUserID string) (models.PullRequest, string, error) {
+func (m *MockService) PullRequestReassign(ctx context.Context, prID, oldUserID string) (*models.PullRequest, string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "PullRequestReassign", ctx, prID, oldUserID)
-	ret0, _ := ret[0].(models.PullRequest)
+	ret0, _ := ret[0].(*models.PullRequest)
 	ret1, _ := ret[1].(string)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2

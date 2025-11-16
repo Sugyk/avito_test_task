@@ -82,7 +82,7 @@ func (h *Handler) PullRequestReassign(w http.ResponseWriter, r *http.Request) {
 	// decode request
 	var req models.PullRequestReassignRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		h.sendError(w, http.StatusBadRequest, "invalid request body", err)
+		h.sendError(w, http.StatusBadRequest, models.InvalidInputErrorCode, err)
 		return
 	}
 	// validate request
@@ -93,14 +93,39 @@ func (h *Handler) PullRequestReassign(w http.ResponseWriter, r *http.Request) {
 	// business logic
 	pr, replacedBy, err := h.service.PullRequestReassign(r.Context(), req.PullRequestId, req.OldReviewerId)
 	if err != nil {
+		// 404
 		// pr not found
-		// PR is already exists
+		if errors.Is(err, models.ErrPRNotFound) {
+			h.sendError(w, http.StatusNotFound, models.NotFoundErrorCode, err)
+			return
+		}
+		// user not found
+		if errors.Is(err, models.ErrUserNotFound) {
+			h.sendError(w, http.StatusNotFound, models.NotFoundErrorCode, err)
+			return
+		}
+		// 409
+		// reassigning merged pr
+		if errors.Is(err, models.ErrReassigningMergedPR) {
+			h.sendError(w, http.StatusConflict, models.PrMergedErrorCode, err)
+			return
+		}
+		// not assigned user
+		if errors.Is(err, models.ErrUserNotAssignedToPR) {
+			h.sendError(w, http.StatusConflict, models.NotAssignedErrorCode, err)
+			return
+		}
+		// no candidates
+		if errors.Is(err, models.ErrNoActiveCandidates) {
+			h.sendError(w, http.StatusConflict, models.NoCandidateErrorCode, err)
+			return
+		}
 		h.sendError(w, http.StatusBadRequest, models.TeamExistsErrorCode, err)
 		return
 	}
 	// create response
 	resp := models.PullRequestReassignResponse200{
-		Pr:         pr,
+		Pr:         *pr,
 		ReplacedBy: replacedBy,
 	}
 	// send response

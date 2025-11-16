@@ -11,6 +11,7 @@ import (
 
 	"github.com/Sugyk/avito_test_task/internal/models"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -604,6 +605,186 @@ func TestPullRequestMerge_NotFound(t *testing.T) {
 	h.PullRequestMerge(w, req)
 
 	require.Equal(t, http.StatusNotFound, w.Code)
+}
+
+func TestPullRequestReassign(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockSvc := NewMockService(ctrl)
+	h := NewHandler(mockSvc, slog.Default())
+
+	testCases := []struct {
+		name          string
+		reqBody       models.PullRequestReassignRequest
+		mockSetup     func()
+		expectedCode  int
+		expectedError *models.Error
+	}{
+		{
+			name: "success",
+			reqBody: models.PullRequestReassignRequest{
+				PullRequestId: "pr-1",
+				OldReviewerId: "user-1",
+			},
+			mockSetup: func() {
+				mockSvc.EXPECT().
+					PullRequestReassign(gomock.Any(), "pr-1", "user-1").
+					Return(
+						&models.PullRequest{PullRequestId: "pr-1"},
+						"user-2",
+						nil,
+					)
+			},
+			expectedCode:  http.StatusOK,
+			expectedError: nil,
+		},
+		{
+			name: "pull_request_id is missed",
+			reqBody: models.PullRequestReassignRequest{
+				PullRequestId: "",
+				OldReviewerId: "user-1",
+			},
+			mockSetup:    nil,
+			expectedCode: http.StatusBadRequest,
+			expectedError: &models.Error{
+				Code:    models.InvalidInputErrorCode,
+				Message: "pull_request_id is required",
+			},
+		},
+		{
+			name: "old_reviewer_id is missed",
+			reqBody: models.PullRequestReassignRequest{
+				PullRequestId: "pr-1",
+				OldReviewerId: "",
+			},
+			mockSetup:    nil,
+			expectedCode: http.StatusBadRequest,
+			expectedError: &models.Error{
+				Code:    models.InvalidInputErrorCode,
+				Message: "old_reviewer_id is required",
+			},
+		},
+		{
+			name: "PR not found",
+			reqBody: models.PullRequestReassignRequest{
+				PullRequestId: "pr-999",
+				OldReviewerId: "user-1",
+			},
+			mockSetup: func() {
+				mockSvc.EXPECT().
+					PullRequestReassign(gomock.Any(), "pr-999", "user-1").
+					Return(nil, "", models.ErrPRNotFound)
+			},
+			expectedCode: http.StatusNotFound,
+			expectedError: &models.Error{
+				Code:    models.NotFoundErrorCode,
+				Message: models.ErrPRNotFound.Error(),
+			},
+		},
+		{
+			name: "User not found",
+			reqBody: models.PullRequestReassignRequest{
+				PullRequestId: "pr-1",
+				OldReviewerId: "user-999",
+			},
+			mockSetup: func() {
+				mockSvc.EXPECT().
+					PullRequestReassign(gomock.Any(), "pr-1", "user-999").
+					Return(nil, "", models.ErrUserNotFound)
+			},
+			expectedCode: http.StatusNotFound,
+			expectedError: &models.Error{
+				Code:    models.NotFoundErrorCode,
+				Message: models.ErrUserNotFound.Error(),
+			},
+		},
+		{
+			name: "Попытка переназначения в merged PR",
+			reqBody: models.PullRequestReassignRequest{
+				PullRequestId: "pr-2",
+				OldReviewerId: "user-1",
+			},
+			mockSetup: func() {
+				mockSvc.EXPECT().
+					PullRequestReassign(gomock.Any(), "pr-2", "user-1").
+					Return(nil, "", models.ErrReassigningMergedPR)
+			},
+			expectedCode: http.StatusConflict,
+			expectedError: &models.Error{
+				Code:    models.PrMergedErrorCode,
+				Message: models.ErrReassigningMergedPR.Error(),
+			},
+		},
+		{
+			name: "Пользователь не назначен на PR",
+			reqBody: models.PullRequestReassignRequest{
+				PullRequestId: "pr-3",
+				OldReviewerId: "user-3",
+			},
+			mockSetup: func() {
+				mockSvc.EXPECT().
+					PullRequestReassign(gomock.Any(), "pr-3", "user-3").
+					Return(nil, "", models.ErrUserNotAssignedToPR)
+			},
+			expectedCode: http.StatusConflict,
+			expectedError: &models.Error{
+				Code:    models.NotAssignedErrorCode,
+				Message: models.ErrUserNotAssignedToPR.Error(),
+			},
+		},
+		{
+			name: "Нет активных кандидатов",
+			reqBody: models.PullRequestReassignRequest{
+				PullRequestId: "pr-4",
+				OldReviewerId: "user-1",
+			},
+			mockSetup: func() {
+				mockSvc.EXPECT().
+					PullRequestReassign(gomock.Any(), "pr-4", "user-1").
+					Return(nil, "", models.ErrNoActiveCandidates)
+			},
+			expectedCode: http.StatusConflict,
+			expectedError: &models.Error{
+				Code:    models.NoCandidateErrorCode,
+				Message: models.ErrNoActiveCandidates.Error(),
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.mockSetup != nil {
+				tc.mockSetup()
+			}
+
+			body, _ := json.Marshal(tc.reqBody)
+			req := httptest.NewRequest(
+				http.MethodPost,
+				"/pull-request/reassign",
+				bytes.NewReader(body),
+			)
+
+			w := httptest.NewRecorder()
+
+			h.PullRequestReassign(w, req)
+
+			assert.Equal(t, tc.expectedCode, w.Code)
+
+			if tc.expectedError != nil {
+				var resp models.ErrorResponse
+				err := json.NewDecoder(w.Body).Decode(&resp)
+				require.NoError(t, err)
+
+				assert.Equal(t, tc.expectedError.Code, resp.Error.Code)
+				assert.Equal(t, tc.expectedError.Message, resp.Error.Message)
+			} else {
+				var resp interface{}
+				err := json.NewDecoder(w.Body).Decode(&resp)
+				require.NoError(t, err)
+			}
+		})
+	}
 }
 
 func TestPullRequestReassign_Success(t *testing.T) {

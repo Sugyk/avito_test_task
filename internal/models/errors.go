@@ -14,13 +14,16 @@ var (
 )
 
 var (
-	ErrTeamExists      = errors.New("team_name already exists")
-	ErrInternalError   = errors.New("internal server error")
-	ErrTeamNotFound    = errors.New("team_name not found")
-	ErrUserNotFound    = errors.New("user not found")
-	ErrPRAlreadyExists = errors.New("PR id already exists")
-	ErrAuthorNotFound  = errors.New("author not found")
-	ErrPRNotFound      = errors.New("PR not found")
+	ErrTeamExists          = errors.New("team_name already exists")
+	ErrInternalError       = errors.New("internal server error")
+	ErrTeamNotFound        = errors.New("team_name not found")
+	ErrUserNotFound        = errors.New("user not found")
+	ErrPRAlreadyExists     = errors.New("PR id already exists")
+	ErrAuthorNotFound      = errors.New("author not found")
+	ErrPRNotFound          = errors.New("PR not found")
+	ErrReassigningMergedPR = errors.New("cannot reassign on merged PR")
+	ErrUserNotAssignedToPR = errors.New("reviewer is not assigned to this PR")
+	ErrNoActiveCandidates  = errors.New("no active replacement candidate in team")
 )
 
 type Error struct {

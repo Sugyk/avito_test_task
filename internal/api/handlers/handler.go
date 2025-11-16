@@ -15,7 +15,7 @@ type Service interface {
 	UsersSetIsActive(ctx context.Context, userID string, isActive bool) (*models.User, error)
 	PullRequestCreate(ctx context.Context, pr *models.PullRequest) (*models.PullRequest, error)
 	PullRequestMerge(ctx context.Context, pr *models.PullRequest) (*models.PullRequest, error)
-	PullRequestReassign(ctx context.Context, prID string, oldUserID string) (models.PullRequest, string, error)
+	PullRequestReassign(ctx context.Context, prID string, oldUserID string) (*models.PullRequest, string, error)
 	UsersGetReview(ctx context.Context, userID string) ([]models.PullRequestShort, error)
 }
 
