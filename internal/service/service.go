@@ -13,6 +13,7 @@ type Repository interface {
 	UsersSetIsActive(ctx context.Context, userID string, isActive bool) (*models.User, error)
 	CreatePullRequestAndAssignReviewers(ctx context.Context, pullRequest *models.PullRequest) (*models.PullRequest, error)
 	MergePullRequest(ctx context.Context, prID string) (*models.PullRequest, error)
+	ReAssignPullRequest(ctx context.Context, prID string, oldUserID string) (*models.PullRequest, string, error)
 }
 
 type Service struct {

@@ -120,7 +120,8 @@ func (h *Handler) PullRequestReassign(w http.ResponseWriter, r *http.Request) {
 			h.sendError(w, http.StatusConflict, models.NoCandidateErrorCode, err)
 			return
 		}
-		h.sendError(w, http.StatusBadRequest, models.TeamExistsErrorCode, err)
+		h.logger.Error("error reassigning reviewer", "error", err.Error())
+		h.sendError(w, http.StatusInternalServerError, models.InternalErrorCode, models.ErrInternalError)
 		return
 	}
 	// create response

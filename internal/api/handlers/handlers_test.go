@@ -801,7 +801,7 @@ func TestPullRequestReassign_Success(t *testing.T) {
 
 	body, _ := json.Marshal(reqBody)
 
-	expectedPR := models.PullRequest{
+	expectedPR := &models.PullRequest{
 		PullRequestId:     "pr-1001",
 		PullRequestName:   "Add search",
 		AuthorId:          "u1",
@@ -824,7 +824,7 @@ func TestPullRequestReassign_Success(t *testing.T) {
 	var resp models.PullRequestReassignResponse200
 	err := json.NewDecoder(w.Body).Decode(&resp)
 	require.NoError(t, err)
-	require.Equal(t, expectedPR, resp.Pr)
+	require.Equal(t, *expectedPR, resp.Pr)
 	require.Equal(t, "u5", resp.ReplacedBy)
 }
 
@@ -889,25 +889,37 @@ func TestPullRequestReassign_NotFound(t *testing.T) {
 
 	mockSvc := NewMockService(ctrl)
 	h := NewHandler(mockSvc, slog.Default())
+	cases := []struct {
+		name   string
+		svcErr error
+	}{
+		{"pr not found", models.ErrPRNotFound},
+		{"no candidate", errors.New("no active replacement candidate in team")},
+	}
 
-	reqBody := models.PullRequestReassignRequest{
+	reqBody := &models.PullRequestReassignRequest{
 		PullRequestId: "unknown-pr",
 		OldReviewerId: "u777",
 	}
 
 	body, _ := json.Marshal(reqBody)
+	for _, c := range cases {
+		t.Run(
+			c.name, func(t *testing.T) {
+				req := httptest.NewRequest(http.MethodPost, "/pullRequest/reassign", bytes.NewReader(body))
+				mockSvc.
+					EXPECT().
+					PullRequestReassign(req.Context(), reqBody.PullRequestId, reqBody.OldReviewerId).
+					Return(nil, "", models.ErrPRNotFound)
 
-	req := httptest.NewRequest(http.MethodPost, "/pullRequest/reassign", bytes.NewReader(body))
-	mockSvc.
-		EXPECT().
-		PullRequestReassign(req.Context(), reqBody.PullRequestId, reqBody.OldReviewerId).
-		Return(models.PullRequest{}, "", errors.New("not found"))
+				w := httptest.NewRecorder()
 
-	w := httptest.NewRecorder()
+				h.PullRequestReassign(w, req)
 
-	h.PullRequestReassign(w, req)
-
-	require.Equal(t, http.StatusBadRequest, w.Code)
+				require.Equal(t, http.StatusNotFound, w.Code)
+			},
+		)
+	}
 }
 
 func TestPullRequestReassign_DomainErrors(t *testing.T) {
@@ -921,31 +933,32 @@ func TestPullRequestReassign_DomainErrors(t *testing.T) {
 		name   string
 		svcErr error
 	}{
-		{"PR merged", errors.New("cannot reassign on merged PR")},
-		{"not assigned", errors.New("reviewer is not assigned to this PR")},
-		{"no candidate", errors.New("no active replacement candidate in team")},
+		{"PR merged", models.ErrReassigningMergedPR},
+		{"not assigned", models.ErrUserNotAssignedToPR},
+		{"no candidate", models.ErrNoActiveCandidates},
 	}
+
+	reqBody := models.PullRequestReassignRequest{
+		PullRequestId: "pr-x",
+		OldReviewerId: "u5",
+	}
+	body, _ := json.Marshal(reqBody)
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 
-			reqBody := models.PullRequestReassignRequest{
-				PullRequestId: "pr-x",
-				OldReviewerId: "u5",
-			}
-			body, _ := json.Marshal(reqBody)
 			req := httptest.NewRequest(http.MethodPost, "/pullRequest/reassign", bytes.NewReader(body))
 
 			mockSvc.
 				EXPECT().
 				PullRequestReassign(req.Context(), reqBody.PullRequestId, reqBody.OldReviewerId).
-				Return(models.PullRequest{}, "", c.svcErr)
+				Return(nil, "", c.svcErr)
 
 			w := httptest.NewRecorder()
 
 			h.PullRequestReassign(w, req)
 
-			require.Equal(t, http.StatusBadRequest, w.Code)
+			require.Equal(t, http.StatusConflict, w.Code)
 		})
 	}
 }

@@ -23,6 +23,9 @@ func (s *Service) PullRequestMerge(ctx context.Context, pr *models.PullRequest) 
 }
 
 func (s *Service) PullRequestReassign(ctx context.Context, prID string, oldUserID string) (*models.PullRequest, string, error) {
-	// TODO: implement the business logic to reassign a pull request reviewer
-	return &models.PullRequest{}, "", nil
+	pr, newReviewer, err := s.repo.ReAssignPullRequest(ctx, prID, oldUserID)
+	if err != nil {
+		return nil, "", err
+	}
+	return pr, newReviewer, nil
 }
