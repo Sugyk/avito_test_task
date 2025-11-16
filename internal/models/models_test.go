@@ -16,7 +16,7 @@ func TestTeamMemberValidate(t *testing.T) {
 		{
 			name: "valid member",
 			member: TeamMember{
-				User_id:  "123",
+				UserId:   "123",
 				Username: "alice",
 				IsActive: bool_pointer(true),
 			},
@@ -25,7 +25,7 @@ func TestTeamMemberValidate(t *testing.T) {
 		{
 			name: "missing user_id",
 			member: TeamMember{
-				User_id:  "",
+				UserId:   "",
 				Username: "bob",
 			},
 			wantErr: true,
@@ -33,7 +33,7 @@ func TestTeamMemberValidate(t *testing.T) {
 		{
 			name: "missing username",
 			member: TeamMember{
-				User_id:  "44",
+				UserId:   "44",
 				Username: "",
 			},
 			wantErr: true,
@@ -64,8 +64,8 @@ func TestTeamValidate(t *testing.T) {
 			team: Team{
 				TeamName: "backend",
 				Members: []TeamMember{
-					{User_id: "1", Username: "alice", IsActive: bool_pointer(true)},
-					{User_id: "2", Username: "bob", IsActive: bool_pointer(true)},
+					{UserId: "1", Username: "alice", IsActive: bool_pointer(true)},
+					{UserId: "2", Username: "bob", IsActive: bool_pointer(true)},
 				},
 			},
 			wantErr: false,
@@ -75,7 +75,7 @@ func TestTeamValidate(t *testing.T) {
 			team: Team{
 				TeamName: "",
 				Members: []TeamMember{
-					{User_id: "1", Username: "alice"},
+					{UserId: "1", Username: "alice"},
 				},
 			},
 			wantErr: true,
@@ -93,7 +93,7 @@ func TestTeamValidate(t *testing.T) {
 			team: Team{
 				TeamName: "devops",
 				Members: []TeamMember{
-					{User_id: "", Username: "bob"},
+					{UserId: "", Username: "bob"},
 				},
 			},
 			wantErr: true,
@@ -125,7 +125,7 @@ func TestTeamAddRequestValidate(t *testing.T) {
 				Team: Team{
 					TeamName: "frontend",
 					Members: []TeamMember{
-						{User_id: "1", Username: "alice", IsActive: bool_pointer(true)},
+						{UserId: "1", Username: "alice", IsActive: bool_pointer(true)},
 					},
 				},
 			},

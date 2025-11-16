@@ -28,7 +28,7 @@ func TestTeamAdd_Success(t *testing.T) {
 	teamInput := &models.Team{
 		TeamName: "backend",
 		Members: []models.TeamMember{
-			{User_id: "1", Username: "alice", IsActive: bool_pointer(true)},
+			{UserId: "1", Username: "alice", IsActive: bool_pointer(true)},
 		},
 	}
 	body, _ := json.Marshal(models.TeamAddRequest{Team: *teamInput})
@@ -129,7 +129,7 @@ func TestTeamAdd_TeamExists(t *testing.T) {
 	teamInput := &models.Team{
 		TeamName: "backend",
 		Members: []models.TeamMember{
-			{User_id: "1", Username: "alice", IsActive: bool_pointer(true)},
+			{UserId: "1", Username: "alice", IsActive: bool_pointer(true)},
 		},
 	}
 	body, _ := json.Marshal(models.TeamAddRequest{Team: *teamInput})
@@ -161,12 +161,12 @@ func TestTeamGet_Success(t *testing.T) {
 		TeamName: "backend",
 		Members: []models.TeamMember{
 			{
-				User_id:  "u1",
+				UserId:   "u1",
 				Username: "Alice",
 				IsActive: bool_pointer(true),
 			},
 			{
-				User_id:  "u2",
+				UserId:   "u2",
 				Username: "Bob",
 				IsActive: bool_pointer(true),
 			},

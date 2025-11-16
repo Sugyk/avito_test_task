@@ -3,13 +3,13 @@ package models
 import "fmt"
 
 type TeamMember struct {
-	User_id  string `json:"user_id" db:"id"`
+	UserId   string `json:"user_id" db:"id"`
 	Username string `json:"username" db:"name"`
 	IsActive *bool  `json:"is_active" db:"isactive"`
 }
 
 func (t *TeamMember) Validate() error {
-	if t.User_id == "" {
+	if t.UserId == "" {
 		return fmt.Errorf("user_id is required")
 	}
 	if t.Username == "" {

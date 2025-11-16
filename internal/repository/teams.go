@@ -37,7 +37,7 @@ func (r *Repository) CreateOrUpdateTeam(ctx context.Context, team *models.Team) 
 	}
 	var values []interface{}
 	for _, member := range team.Members {
-		values = append(values, member.User_id, member.Username, teamName, member.IsActive)
+		values = append(values, member.UserId, member.Username, teamName, member.IsActive)
 	}
 	var scopes = []string{}
 	placeholder := "($%d, $%d, $%d, $%d)"
