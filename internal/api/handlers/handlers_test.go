@@ -65,6 +65,17 @@ func TestTeamAdd_InvalidJSON(t *testing.T) {
 
 	h.TeamAdd(w, req)
 
+	var expectedBody = models.ErrorResponse{
+		Error: models.Error{
+			Code:    models.InvalidInputErrorCode,
+			Message: "invalid character 'i' looking for beginning of object key string",
+		},
+	}
+	var outBody models.ErrorResponse
+	err := json.NewDecoder(w.Result().Body).Decode(&outBody)
+	require.NoError(t, err)
+	require.Equal(t, expectedBody, outBody)
+
 	require.Equal(t, http.StatusBadRequest, w.Code)
 }
 
@@ -349,6 +360,17 @@ func TestPullRequestCreate_InvalidJSON(t *testing.T) {
 
 	h.PullRequestCreate(w, req)
 
+	var expectedBody = models.ErrorResponse{
+		Error: models.Error{
+			Code:    models.InvalidInputErrorCode,
+			Message: "invalid character 'i' looking for beginning of object key string",
+		},
+	}
+	var outBody models.ErrorResponse
+	err := json.NewDecoder(w.Result().Body).Decode(&outBody)
+	require.NoError(t, err)
+	require.Equal(t, expectedBody, outBody)
+
 	require.Equal(t, http.StatusBadRequest, w.Code)
 }
 
@@ -517,6 +539,17 @@ func TestPullRequestMerge_InvalidJSON(t *testing.T) {
 
 	h.PullRequestMerge(w, req)
 
+	var expectedBody = models.ErrorResponse{
+		Error: models.Error{
+			Code:    models.InvalidInputErrorCode,
+			Message: "invalid character 'i' looking for beginning of object key string",
+		},
+	}
+	var outBody models.ErrorResponse
+	err := json.NewDecoder(w.Result().Body).Decode(&outBody)
+	require.NoError(t, err)
+	require.Equal(t, expectedBody, outBody)
+
 	require.Equal(t, http.StatusBadRequest, w.Code)
 }
 
@@ -621,6 +654,17 @@ func TestPullRequestReassign_InvalidJSON(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	h.PullRequestReassign(w, req)
+
+	var expectedBody = models.ErrorResponse{
+		Error: models.Error{
+			Code:    models.InvalidInputErrorCode,
+			Message: "invalid character 'i' looking for beginning of object key string",
+		},
+	}
+	var outBody models.ErrorResponse
+	err := json.NewDecoder(w.Result().Body).Decode(&outBody)
+	require.NoError(t, err)
+	require.Equal(t, expectedBody, outBody)
 
 	require.Equal(t, http.StatusBadRequest, w.Code)
 }

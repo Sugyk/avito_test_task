@@ -24,8 +24,8 @@ var (
 )
 
 type Error struct {
-	Code    string
-	Message string
+	Code    string `json:"code"`
+	Message string `json:"message"`
 }
 
 type ErrorResponse struct {
