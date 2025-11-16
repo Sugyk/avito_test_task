@@ -21,14 +21,11 @@ stop_integration:
 integration:
 	@echo "run integration tests"
 	@$(MAKE) start_integration
-	@touch ./tests/integration/integration.lock
 	@if ! go test ./tests/integration/... -v; then \
-		rm -f ./tests/integration/integration.lock; \
 		$(MAKE) stop_integration; \
 		echo "$(RED)integration tests failed$(NC)"; \
 		exit 1; \
 	else \
-		rm -f ./tests/integration/integration.lock; \
 		$(MAKE) stop_integration; \
 		echo "$(GREEN)integration tests passed$(NC)"; \
 	fi
