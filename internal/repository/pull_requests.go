@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"math/rand"
 	"slices"
 	"time"
 
@@ -12,79 +11,37 @@ import (
 	"github.com/Sugyk/avito_test_task/internal/models"
 )
 
-func getTwoRandomIds(ids []string) []string {
-	l := len(ids)
-	result := []string{}
-	if l == 0 {
-		return result
-	}
-	indexes := []int{}
-	indexes = append(indexes, rand.Intn(l))
-	if l > 1 {
-		for {
-			if i := rand.Intn(l); i != indexes[0] {
-				indexes = append(indexes, i)
-				break
-			}
-		}
-	}
-	for _, i := range indexes {
-		result = append(result, ids[i])
-	}
-	return result
+func (r *Repository) GetUser(ctx context.Context, id string) (*models.User, error) {
+	var user models.User
+	getUserQuery := `SELECT id, name, team_name, isActive FROM Users WHERE id = $1`
+
+	err := r.db.GetContext(ctx, &user, getUserQuery, id)
+	return &user, err
+}
+
+func (r *Repository) GetPullRequestBase(ctx context.Context, prID string) (*models.PullRequest, error) {
+	var pr models.PullRequest
+	checkPRQuery := `SELECT id, title, author_id, status FROM PullRequests WHERE id = $1`
+	err := r.db.GetContext(ctx, &pr, checkPRQuery, prID)
+	return &pr, err
 }
 
 func (r *Repository) CreatePullRequestAndAssignReviewers(ctx context.Context, pullRequest *models.PullRequest) (_ *models.PullRequest, err error) {
-	var resultPr = &models.PullRequest{}
 	tx, err := r.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("db: error starting transaction: %w", err)
 	}
 	defer func() {
 		if err != nil {
-			if err := tx.Rollback(); err != nil {
+			if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
 				r.logger.Error("db: error while rollback commit", "error", err.Error())
 			}
 		} else {
-			if err := tx.Commit(); err != nil {
+			if err := tx.Commit(); err != nil && err != sql.ErrTxDone {
 				r.logger.Error("db: error while commit", "error", err.Error())
 			}
 		}
 	}()
-	checkPRQuery := `SELECT id FROM PullRequests WHERE id = $1`
-	var prID string
-	err = tx.GetContext(ctx, &prID, checkPRQuery, pullRequest.PullRequestId)
-	if err == nil {
-		return nil, models.ErrPRAlreadyExists
-	}
-	if err != sql.ErrNoRows {
-		return nil, fmt.Errorf("db: error checking PR: %w", err)
-	}
-
-	var checkAuthorQueryRes struct {
-		Id        string `db:"id"`
-		Team_name string `db:"team_name"`
-	}
-	checkAuthorQuery := `SELECT id, team_name FROM Users WHERE id = $1`
-
-	err = tx.GetContext(ctx, &checkAuthorQueryRes, checkAuthorQuery, pullRequest.AuthorId)
-	if err == sql.ErrNoRows {
-		return nil, models.ErrAuthorNotFound
-	}
-	if err != nil {
-		return nil, fmt.Errorf("db: error checking author: %w", err)
-	}
-
-	var activeTeamMembersIds []string
-	getTeamIDsQuery := `
-	SELECT id FROM Users
-	WHERE team_name = $1 AND isActive = true AND id != $2
-	`
-
-	err = tx.SelectContext(ctx, &activeTeamMembersIds, getTeamIDsQuery, checkAuthorQueryRes.Team_name, checkAuthorQueryRes.Id)
-	if err != nil {
-		return nil, fmt.Errorf("db: error selecting active members: %w", err)
-	}
 
 	createPRQuery := `
 	INSERT INTO PullRequests(id, title, author_id, status)
@@ -92,25 +49,24 @@ func (r *Repository) CreatePullRequestAndAssignReviewers(ctx context.Context, pu
 	RETURNING id, title, author_id, status
 	`
 	err = tx.GetContext(ctx,
-		resultPr,
+		pullRequest,
 		createPRQuery,
 		pullRequest.PullRequestId,
 		pullRequest.PullRequestName,
-		checkAuthorQueryRes.Id,
+		pullRequest.AuthorId,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("db: error creating pr: %w", err)
 	}
-
-	reviewers_ids := getTwoRandomIds(activeTeamMembersIds)
-	if len(reviewers_ids) > 0 {
-
+	if len(pullRequest.AssignedReviewers) > 0 {
 		insertReviewersBuilder := squirrel.Insert("PullRequestsUsers").Columns("pr_id", "user_id")
-		for _, id := range reviewers_ids {
+		for _, id := range pullRequest.AssignedReviewers {
 			insertReviewersBuilder = insertReviewersBuilder.Values(pullRequest.PullRequestId, id)
 		}
-
-		insertReviewersQuery, args, _ := insertReviewersBuilder.PlaceholderFormat(squirrel.Dollar).ToSql()
+		insertReviewersQuery, args, err := insertReviewersBuilder.PlaceholderFormat(squirrel.Dollar).ToSql()
+		if err != nil {
+			return nil, fmt.Errorf("db: error building query: %w", err)
+		}
 		_, err = tx.ExecContext(ctx, insertReviewersQuery, args...)
 		if err != nil {
 			return nil, fmt.Errorf("db: error insert reviewers: %w", err)
@@ -120,8 +76,7 @@ func (r *Repository) CreatePullRequestAndAssignReviewers(ctx context.Context, pu
 	if err != nil {
 		return nil, fmt.Errorf("db: commit error: %w", err)
 	}
-	resultPr.AssignedReviewers = reviewers_ids
-	return resultPr, nil
+	return pullRequest, nil
 }
 
 func (r *Repository) MergePullRequest(ctx context.Context, prID string) (*models.PullRequest, error) {

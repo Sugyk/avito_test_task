@@ -15,6 +15,9 @@ type Repository interface {
 	MergePullRequest(ctx context.Context, prID string) (*models.PullRequest, error)
 	ReAssignPullRequest(ctx context.Context, prID string, oldUserID string) (*models.PullRequest, string, error)
 	GetUsersReview(ctx context.Context, userID string) ([]models.PullRequestShort, error)
+	GetPullRequestBase(ctx context.Context, prID string) (*models.PullRequest, error)
+	GetUser(ctx context.Context, id string) (*models.User, error)
+	GetTeamMembers(ctx context.Context, team_name string) ([]models.User, error)
 }
 
 type Service struct {

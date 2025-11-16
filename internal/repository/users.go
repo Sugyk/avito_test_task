@@ -8,6 +8,16 @@ import (
 	"github.com/Sugyk/avito_test_task/internal/models"
 )
 
+func (r *Repository) GetTeamMembers(ctx context.Context, team_name string) ([]models.User, error) {
+	var teamMembers []models.User
+	getTeamIDsQuery := `
+	SELECT id, name, team_name, isActive FROM Users
+	WHERE team_name = $1
+	`
+	err := r.db.SelectContext(ctx, &teamMembers, getTeamIDsQuery, team_name)
+	return teamMembers, err
+}
+
 func (r *Repository) UsersSetIsActive(ctx context.Context, userID string, isActive bool) (*models.User, error) {
 	var user models.User
 	getQuery := `SELECT id, name, team_name, isActive FROM Users WHERE id = $1`
