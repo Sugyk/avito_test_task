@@ -56,3 +56,17 @@ func (r *Repository) GetUsersReview(ctx context.Context, userID string) ([]model
 	}
 	return shortPRs, nil
 }
+
+func (r *Repository) GetActiveTeamMembersIds(ctx context.Context, team_name string, exclude_id string) ([]string, error) {
+	var activeTeamMembersIds []string
+	getTeamIDsQuery := `
+	SELECT id FROM Users
+	WHERE team_name = $1 AND isActive = true AND id != $2
+	`
+	err := r.db.SelectContext(ctx, &activeTeamMembersIds, getTeamIDsQuery, team_name, exclude_id)
+	if err != nil {
+		return nil, fmt.Errorf("db: error selecting active members: %w", err)
+	}
+
+	return activeTeamMembersIds, nil
+}

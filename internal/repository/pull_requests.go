@@ -116,6 +116,10 @@ func (r *Repository) CreatePullRequestAndAssignReviewers(ctx context.Context, pu
 			return nil, fmt.Errorf("db: error insert reviewers: %w", err)
 		}
 	}
+	err = tx.Commit()
+	if err != nil {
+		return nil, fmt.Errorf("db: commit error: %w", err)
+	}
 	resultPr.AssignedReviewers = reviewers_ids
 	return resultPr, nil
 }
@@ -282,6 +286,10 @@ func (r *Repository) ReAssignPullRequest(ctx context.Context, prID string, oldUs
 				prID, oldUserID,
 			)
 
+	}
+	err = tx.Commit()
+	if err != nil {
+		return nil, "", fmt.Errorf("db: commit error:%w", err)
 	}
 	pullRequest.AssignedReviewers = append(reviewersIds, newReviewerID)
 	return &pullRequest, newReviewerID, nil

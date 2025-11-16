@@ -9,14 +9,20 @@ import (
 	"github.com/Sugyk/avito_test_task/internal/models"
 )
 
-func (r *Repository) CreateOrUpdateTeam(ctx context.Context, team *models.Team) (*models.Team, error) {
+func (r *Repository) CreateOrUpdateTeam(ctx context.Context, team *models.Team) (_ *models.Team, err error) {
 	tx, err := r.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("db: error while creating transaction")
 	}
 	defer func() {
-		if err := tx.Rollback(); err != nil {
-			r.logger.Error("db: error while rollback changes", "error", err.Error())
+		if err != nil {
+			if err := tx.Rollback(); err != nil {
+				r.logger.Error("db: error while rollback changes", "error", err.Error())
+			}
+		} else {
+			if err := tx.Commit(); err != nil {
+				r.logger.Error("db: error while rollback changes", "error", err.Error())
+			}
 		}
 	}()
 
