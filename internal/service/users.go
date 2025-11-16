@@ -7,11 +7,17 @@ import (
 )
 
 func (s *Service) UsersSetIsActive(ctx context.Context, userID string, isActive bool) (*models.User, error) {
-	updatedUser, err := s.repo.UsersSetIsActive(ctx, userID, isActive)
+	user, err := s.repo.GetUser(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
-	return updatedUser, nil
+
+	err = s.repo.UsersSetIsActive(ctx, userID, isActive)
+	if err != nil {
+		return nil, err
+	}
+	user.IsActive = isActive
+	return user, nil
 }
 
 func (s *Service) UsersGetReview(ctx context.Context, userID string) ([]models.PullRequestShort, error) {

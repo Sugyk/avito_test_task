@@ -10,7 +10,7 @@ import (
 type Repository interface {
 	CreateOrUpdateTeam(ctx context.Context, team *models.Team) (*models.Team, error)
 	GetTeam(ctx context.Context, teamName string) (*models.Team, error)
-	UsersSetIsActive(ctx context.Context, userID string, isActive bool) (*models.User, error)
+	UsersSetIsActive(ctx context.Context, userID string, isActive bool) error
 	CreatePullRequestAndAssignReviewers(ctx context.Context, pullRequest *models.PullRequest) (*models.PullRequest, error)
 	MergePullRequest(ctx context.Context, pr *models.PullRequest) (*models.PullRequest, error)
 	ReAssignPullRequest(ctx context.Context, prID string, oldUser *models.User, newReviewerId string) (string, error)

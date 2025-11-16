@@ -21,20 +21,20 @@ func (r *Repository) GetPullRequestBase(ctx context.Context, prID string) (*mode
 }
 
 func (r *Repository) GetPRReviewers(ctx context.Context, prID string) ([]string, error) {
-	reviewersIds := make([]string, 0)
+	ReviewersIds := make([]string, 0)
 	getReviewersQuery := `
 	SELECT user_id 
 	FROM PullRequestsUsers
 	WHERE pr_id = $1
 	`
-	err := r.db.GetContext(ctx, &reviewersIds, getReviewersQuery, prID)
+	err := r.db.SelectContext(ctx, &ReviewersIds, getReviewersQuery, prID)
 	if err == sql.ErrNoRows {
 		return []string{}, models.ErrNoReviewers
 	}
 	if err != nil {
 		return []string{}, fmt.Errorf("db: error retrieving reviewers: %w", err)
 	}
-	return reviewersIds, nil
+	return ReviewersIds, nil
 }
 
 func (r *Repository) CreatePullRequestAndAssignReviewers(ctx context.Context, pullRequest *models.PullRequest) (_ *models.PullRequest, err error) {
@@ -93,29 +93,15 @@ func (r *Repository) CreatePullRequestAndAssignReviewers(ctx context.Context, pu
 }
 
 func (r *Repository) MergePullRequest(ctx context.Context, pr *models.PullRequest) (*models.PullRequest, error) {
-	membersQuery := `
-		SELECT user_id 
-		FROM PullRequestsUsers 
-		WHERE pr_id = $1
-	`
-
-	reviewers := make([]string, 0)
-
-	err := r.db.SelectContext(ctx, &reviewers, membersQuery, pr.PullRequestId)
-	if err != nil {
-		return nil, fmt.Errorf("db: error retrieving reviewers: %w", err)
-	}
-	pr.AssignedReviewers = reviewers
-
 	merged_time := time.Now()
 
-	updateMemberQuery := `
+	mergeQuery := `
 		UPDATE PullRequests
 		SET status = 'MERGED', merged_at = $1
 		WHERE id = $2
 		RETURNING status, merged_at
 	`
-	err = r.db.GetContext(ctx, &pr, updateMemberQuery, merged_time, pr.PullRequestId)
+	err := r.db.GetContext(ctx, pr, mergeQuery, merged_time, pr.PullRequestId)
 	if err != nil {
 		return nil, fmt.Errorf("db: error updating team members: %w", err)
 	}
