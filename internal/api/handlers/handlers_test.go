@@ -214,7 +214,9 @@ func TestTeamGet_NotFound(t *testing.T) {
 	h.TeamGet(w, req)
 
 	resp := w.Result()
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	require.Equal(t, http.StatusNotFound, resp.StatusCode)
 }
@@ -228,8 +230,9 @@ func TestTeamGet_MissingTeamName(t *testing.T) {
 	h.TeamGet(w, req)
 
 	resp := w.Result()
-	defer resp.Body.Close()
-
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 	require.Equal(t, http.StatusBadRequest, resp.StatusCode)
 }
 func TestUsersSetIsActive_Success(t *testing.T) {

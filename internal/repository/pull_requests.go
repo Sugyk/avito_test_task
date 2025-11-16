@@ -42,9 +42,13 @@ func (r *Repository) CreatePullRequestAndAssignReviewers(ctx context.Context, pu
 	}
 	defer func() {
 		if err != nil {
-			tx.Rollback()
+			if err := tx.Rollback(); err != nil {
+				r.logger.Error("db: error while rollback commit", "error", err.Error())
+			}
 		} else {
-			tx.Commit()
+			if err := tx.Commit(); err != nil {
+				r.logger.Error("db: error while commit", "error", err.Error())
+			}
 		}
 	}()
 	checkPRQuery := `SELECT id FROM PullRequests WHERE id = $1`

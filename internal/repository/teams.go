@@ -14,7 +14,11 @@ func (r *Repository) CreateOrUpdateTeam(ctx context.Context, team *models.Team) 
 	if err != nil {
 		return nil, fmt.Errorf("db: error while creating transaction")
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil {
+			r.logger.Error("db: error while rollback changes", "error", err.Error())
+		}
+	}()
 
 	var teamName string
 	checkQuery := `SELECT name FROM Teams WHERE name = $1`
