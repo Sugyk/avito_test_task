@@ -21,7 +21,7 @@ func (h *Handler) UsersSetIsActive(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// business logic
-	user, err := h.service.UsersSetIsActive(r.Context(), req.UserId, req.IsActive)
+	user, err := h.service.UsersSetIsActive(r.Context(), req.UserId, *req.IsActive)
 	if err != nil {
 		// user not found
 		if errors.Is(err, models.ErrUserNotFound) {

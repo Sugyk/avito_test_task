@@ -166,7 +166,7 @@ func TestUsersSetIsActiveRequestValidate(t *testing.T) {
 			name: "valid request",
 			req: UsersSetIsActiveRequest{
 				UserId:   "u1",
-				IsActive: true,
+				IsActive: bool_pointer(true),
 			},
 			wantErr: false,
 		},
@@ -174,7 +174,7 @@ func TestUsersSetIsActiveRequestValidate(t *testing.T) {
 			name: "missing user_id",
 			req: UsersSetIsActiveRequest{
 				UserId:   "",
-				IsActive: false,
+				IsActive: bool_pointer(false),
 			},
 			wantErr: true,
 		},

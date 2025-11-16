@@ -229,7 +229,7 @@ func TestUsersSetIsActive_Success(t *testing.T) {
 
 	reqBody := models.UsersSetIsActiveRequest{
 		UserId:   "u2",
-		IsActive: false,
+		IsActive: bool_pointer(false),
 	}
 	body, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest(http.MethodPost, "/users/setIsActive", bytes.NewReader(body))
@@ -286,7 +286,7 @@ func TestUsersSetIsActive_UserNotFound(t *testing.T) {
 
 	reqBody := models.UsersSetIsActiveRequest{
 		UserId:   "nonexistent",
-		IsActive: true,
+		IsActive: bool_pointer(true),
 	}
 	body, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest(http.MethodPost, "/users/setIsActive", bytes.NewReader(body))

@@ -69,12 +69,15 @@ type TeamGetResponse200 struct {
 
 type UsersSetIsActiveRequest struct {
 	UserId   string `json:"user_id"`
-	IsActive bool   `json:"is_active"`
+	IsActive *bool  `json:"is_active"`
 }
 
 func (u *UsersSetIsActiveRequest) Validate() error {
 	if u.UserId == "" {
-		return fmt.Errorf("%w: user_id is required", nil) // TODO: insert error
+		return fmt.Errorf("user_id is required")
+	}
+	if u.IsActive == nil {
+		return fmt.Errorf("is_active is required")
 	}
 	return nil
 }
